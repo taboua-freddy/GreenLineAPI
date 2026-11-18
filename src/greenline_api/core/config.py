@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     api_v1_prefix: str = "/api/v1"
     database_url: str = "postgresql+asyncpg://greenline:greenline@localhost:5432/greenline"
     google_maps_api_key: str | None = None
+    google_application_credentials: str | None = None
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

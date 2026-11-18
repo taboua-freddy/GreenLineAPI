@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
@@ -13,6 +14,9 @@ from greenline_api.db.session import dispose_engine
 from greenline_api.services.routing import close_routing_client
 
 settings = get_settings()
+if settings.google_application_credentials:
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
+
 UI_PATH = Path(__file__).parent / "static" / "index.html"
 
 
