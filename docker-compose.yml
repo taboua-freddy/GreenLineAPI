@@ -6,6 +6,12 @@ services:
     environment:
       APP_ENV: development
       DATABASE_URL: postgresql+asyncpg://greenline:greenline@db:5432/greenline
+      GOOGLE_APPLICATION_CREDENTIALS: /run/google/application_default_credentials.json
+    volumes:
+      - type: bind
+        source: ${APPDATA}/gcloud/application_default_credentials.json
+        target: /run/google/application_default_credentials.json
+        read_only: true
     depends_on:
       db:
         condition: service_healthy

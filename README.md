@@ -30,7 +30,14 @@ uvicorn greenline_api.main:app --reload --app-dir src
 
 La page `/` utilise Google Maps JavaScript API pour afficher la carte. Cliquez sur « Départ » ou « Arrivée », puis sur la carte pour définir les coordonnées, ou saisissez-les directement. « Calculer l’ETA » appelle `POST /api/v1/eta` et trace la géométrie de route retournée par Google Routes.
 
-Renseignez `GOOGLE_MAPS_API_KEY` dans `.env` avec une clé dédiée à la carte navigateur. Dans Google Cloud, activez Maps JavaScript API et la facturation ; restreignez cette clé au référent de l’application (pour un test local : `http://localhost:8000/*`) et à Maps JavaScript API. Cette clé est visible dans le navigateur par conception et ne doit servir qu’à la carte. Le calcul serveur utilise séparément les identifiants Application Default Credentials (ADC) de Google Cloud ; activez également Routes API et fournissez ADC au processus (par exemple `gcloud auth application-default login` en local ou un compte de service associé à l’environnement de déploiement). Dans Docker, les identifiants ADC doivent être accessibles au conteneur.
+Renseignez `GOOGLE_MAPS_API_KEY` dans `.env` avec une clé dédiée à la carte navigateur. Dans Google Cloud, activez Maps JavaScript API et la facturation ; restreignez cette clé au référent de l’application (pour un test local : `http://localhost:8000/*`) et à Maps JavaScript API. Cette clé est visible dans le navigateur par conception et ne sert qu’à la carte.
+
+Le calcul d’itinéraire utilise séparément les identifiants Application Default Credentials (ADC) du serveur. Activez Routes API et la facturation dans le même projet Google Cloud, puis créez les identifiants sur la machine qui exécute l’API :
+
+- **Python local sous Windows :** exécutez `gcloud auth application-default login` dans PowerShell. Le client Google détectera le fichier ADC de votre profil Windows.
+- **Docker Compose sous Windows :** exécutez la même commande sur l’hôte avant `docker compose up --build`. Compose monte en lecture seule `%APPDATA%\gcloud\application_default_credentials.json` dans le conteneur et définit `GOOGLE_APPLICATION_CREDENTIALS` pour le client.
+
+Ne confondez pas la clé navigateur `GOOGLE_MAPS_API_KEY` avec les identifiants ADC : la première ne donne pas accès au calcul serveur. Pour un déploiement, utilisez l’identité de service ou le mécanisme d’identifiants ADC fourni par l’environnement plutôt que de copier les identifiants personnels du poste de développement.
 
 ## Calcul d’ETA
 
