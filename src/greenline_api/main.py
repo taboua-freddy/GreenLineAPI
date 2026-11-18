@@ -18,6 +18,7 @@ if settings.google_application_credentials:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
 
 UI_PATH = Path(__file__).parent / "static" / "index.html"
+LIVE_UI_PATH = Path(__file__).parent / "static" / "live.html"
 
 
 @asynccontextmanager
@@ -43,3 +44,9 @@ app.include_router(config_router, prefix=settings.api_v1_prefix)
 async def eta_tester() -> FileResponse:
     """Sert la page HTML qui permet de tester la carte et le calcul d’ETA."""
     return FileResponse(UI_PATH)
+
+
+@app.get("/live", include_in_schema=False)
+async def live_eta_tester() -> FileResponse:
+    """Sert la page de simulation dynamique d’un trajet."""
+    return FileResponse(LIVE_UI_PATH)

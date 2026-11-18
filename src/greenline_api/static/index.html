@@ -9,6 +9,7 @@
     * { box-sizing:border-box; }
     body { margin:0; font:15px/1.5 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color:var(--ink); background:#f5f7f5; }
     header { height:66px; display:flex; align-items:center; gap:12px; padding:0 max(24px, calc((100vw - 1320px)/2)); background:#fff; border-bottom:1px solid var(--line); }
+    .nav-link { margin-left:auto; padding:8px 12px; border:1px solid var(--line); border-radius:8px; color:var(--green); text-decoration:none; font-size:13px; font-weight:700; }
     .brand { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:var(--green); font-weight:800; }
     header strong { font-size:17px; } header span { color:var(--muted); font-size:13px; }
     main { max-width:1320px; margin:0 auto; padding:34px 24px 48px; }
@@ -46,7 +47,7 @@
   </style>
 </head>
 <body>
-  <header><div class="brand">G</div><strong>GreenLine</strong><span>Outil de test ETA</span></header>
+  <header><div class="brand">G</div><strong>GreenLine</strong><span>Outil de test ETA</span><a class="nav-link" href="/live">Simulation dynamique →</a></header>
   <main>
     <section class="intro"><small>Interventions · Routage</small><h1>Calculer une ETA</h1><p>Choisissez deux points sur la carte ou saisissez leurs coordonnées GPS.</p></section>
     <div class="layout">
@@ -98,8 +99,8 @@
       const { Marker } = await google.maps.importLibrary("marker");
       const { encoding } = await google.maps.importLibrary("geometry");
       map = new Map(document.getElementById("map"), { center: {lat:48.8566,lng:2.32}, zoom:12, mapTypeControl:false, streetViewControl:false, fullscreenControl:true });
-      points.origin.marker = new Marker({map, position:{lat:points.origin.lat,lng:points.origin.lng}, title:"Départ"});
-      points.destination.marker = new Marker({map, position:{lat:points.destination.lat,lng:points.destination.lng}, title:"Arrivée"});
+      points.origin.marker = new Marker({map, position:{lat:points.origin.lat,lng:points.origin.lng}, title:"Départ", icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:"#16865d",fillOpacity:1,strokeColor:"#ffffff",strokeWeight:2}});
+      points.destination.marker = new Marker({map, position:{lat:points.destination.lat,lng:points.destination.lng}, title:"Arrivée", icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:"#e06b50",fillOpacity:1,strokeColor:"#ffffff",strokeWeight:2}});
       const bounds = new google.maps.LatLngBounds();
       bounds.extend(points.origin.marker.getPosition()); bounds.extend(points.destination.marker.getPosition()); map.fitBounds(bounds, 70);
       map.addListener("click", event => updatePoint(activePoint, event.latLng.lat(), event.latLng.lng()));

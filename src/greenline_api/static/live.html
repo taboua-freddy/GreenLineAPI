@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GreenLine — Simulation de trajet</title>
+  <style>
+    :root { color-scheme:light; --green:#147d55; --ink:#18251f; --muted:#66746d; --line:#e0e8e3; --soft:#f4f8f5; --blue:#3478f6; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#f5f7f5; }
+    header { height:66px; display:flex; align-items:center; gap:12px; padding:0 max(24px,calc((100vw - 1320px)/2)); background:#fff; border-bottom:1px solid var(--line); }
+    .brand { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:var(--green); font-weight:800; }
+    header strong { font-size:17px; } header span { color:var(--muted); font-size:13px; }
+    .nav-link { margin-left:auto; padding:8px 12px; border:1px solid var(--line); border-radius:8px; color:var(--green); text-decoration:none; font-size:13px; font-weight:700; }
+    main { max-width:1320px; margin:0 auto; padding:34px 24px 48px; }
+    .intro { margin-bottom:22px; } .intro small { color:var(--green); font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:5px 0; font-size:30px; letter-spacing:-.03em; } .intro p { margin:0; color:var(--muted); }
+    .layout { display:grid; grid-template-columns:365px minmax(0,1fr); gap:20px; align-items:stretch; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:16px; box-shadow:0 3px 14px #18382908; }
+    .controls { padding:22px; } .section-title { font-size:15px; font-weight:700; margin:0 0 5px; }
+    .hint { color:var(--muted); font-size:13px; margin:0 0 18px; }
+    .selector { display:flex; gap:8px; margin:0 0 14px; }
+    .select-btn { flex:1; padding:9px 10px; color:#53615a; background:#fff; border:1px solid var(--line); border-radius:9px; font:inherit; font-size:13px; font-weight:650; cursor:pointer; }
+    .select-btn.active { color:var(--green); background:#eaf5ef; border-color:#b8ddc9; }
+    .point { padding:13px; border:1px solid var(--line); border-radius:11px; margin-bottom:12px; }
+    .point-head { display:flex; align-items:center; gap:8px; margin-bottom:10px; font-weight:700; font-size:14px; }
+    .dot { width:10px; height:10px; border-radius:50%; background:#16865d; } .dot.end { background:#e06b50; }
+    .coords { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+    label { display:block; color:var(--muted); font-size:11px; margin-bottom:3px; }
+    input,select { width:100%; padding:9px; border:1px solid var(--line); border-radius:7px; color:var(--ink); font:13px ui-monospace,SFMono-Regular,Consolas,monospace; background:#fff; }
+    input:focus,select:focus { outline:2px solid #a5d6ba; border-color:var(--green); }
+    .settings { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:16px 0; }
+    .primary,.secondary { width:100%; padding:11px; border-radius:9px; font:inherit; font-weight:700; cursor:pointer; }
+    .primary { color:#fff; background:var(--green); border:0; } .primary:hover { background:#0f6847; }
+    .secondary { margin-top:8px; color:#43534a; background:#fff; border:1px solid var(--line); }
+    button:disabled { opacity:.55; cursor:not-allowed; }
+    #message { min-height:20px; margin:10px 0 0; color:var(--muted); font-size:13px; } #message.error { color:#b33d30; }
+    .stats { display:none; margin-top:16px; padding:15px; background:var(--soft); border:1px solid #dcebe2; border-radius:11px; }
+    .stats.show { display:block; }
+    .stat-top { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--muted); font-size:12px; }
+    .progress { height:8px; margin:10px 0; overflow:hidden; border-radius:9px; background:#dfe9e3; }
+    .progress > span { display:block; height:100%; width:0; border-radius:inherit; background:var(--green); transition:width .25s linear; }
+    .progress-meta { display:flex; justify-content:space-between; gap:8px; color:#43534a; font-size:13px; }
+    .eta { margin-top:10px; color:var(--green); font-size:20px; font-weight:750; }
+    .legend { display:flex; flex-wrap:wrap; gap:12px; margin:14px 0 0; color:#53615a; font-size:12px; }
+    .legend-item { display:inline-flex; align-items:center; gap:6px; }
+    .legend-line { width:20px; height:4px; border-radius:4px; background:#b9c8c0; }
+    .legend-line.done { background:#147d55; } .legend-line.left { background:#3478f6; }
+    .map-panel { min-height:620px; overflow:hidden; position:relative; }
+    #map { width:100%; height:100%; min-height:620px; }
+    .map-tip { position:absolute; top:14px; left:50%; transform:translateX(-50%); z-index:1; padding:8px 12px; border-radius:8px; background:#fff; box-shadow:0 2px 10px #0002; color:#45524b; font-size:12px; white-space:nowrap; pointer-events:none; }
+    .map-error { position:absolute; inset:0; z-index:2; display:none; place-items:center; padding:30px; text-align:center; background:#f4f8f5; color:var(--muted); }
+    .map-error.show { display:grid; } .map-error strong { color:var(--ink); display:block; margin-bottom:6px; }
+    @media(max-width:850px) { .layout { grid-template-columns:1fr; } .map-panel,#map { min-height:440px; } main { padding:24px 16px; } }
+  </style>
+</head>
+<body>
+  <header><div class="brand">G</div><strong>GreenLine</strong><span>Simulation de trajet</span><a class="nav-link" href="/">← Calcul ETA</a></header>
+  <main>
+    <section class="intro"><small>Interventions · Suivi</small><h1>Simuler un trajet en direct</h1><p>Choisissez les points et observez la progression du véhicule sur l’itinéraire.</p></section>
+    <div class="layout">
+      <section class="panel controls">
+        <h2 class="section-title">Trajet à simuler</h2>
+        <p class="hint">Choisissez Départ ou Arrivée, puis cliquez sur la carte pour déplacer ce point.</p>
+        <div class="selector"><button class="select-btn active" data-point="origin" type="button">● Départ</button><button class="select-btn" data-point="destination" type="button">● Arrivée</button></div>
+        <div class="point"><div class="point-head"><i class="dot"></i>Départ</div><div class="coords"><div><label for="origin-lat">Latitude</label><input id="origin-lat" type="number" step="any" value="48.8566"></div><div><label for="origin-lng">Longitude</label><input id="origin-lng" type="number" step="any" value="2.3522"></div></div></div>
+        <div class="point"><div class="point-head"><i class="dot end"></i>Arrivée</div><div class="coords"><div><label for="destination-lat">Latitude</label><input id="destination-lat" type="number" step="any" value="48.8584"></div><div><label for="destination-lng">Longitude</label><input id="destination-lng" type="number" step="any" value="2.2945"></div></div></div>
+        <div class="settings">
+          <div><label for="interval">Actualisation</label><select id="interval"><option value="1">Chaque 1 s</option><option value="2" selected>Chaque 2 s</option><option value="5">Chaque 5 s</option><option value="10">Chaque 10 s</option></select></div>
+          <div><label for="speed">Vitesse de simulation</label><select id="speed"><option value="1">1× (temps réel)</option><option value="10">10×</option><option value="60" selected>60× (rapide)</option></select></div>
+        </div>
+        <button id="start" class="primary" type="button">Calculer et démarrer</button>
+        <button id="pause" class="secondary" type="button" disabled>Mettre en pause</button>
+        <button id="reset" class="secondary" type="button">Réinitialiser</button>
+        <p id="message" role="status">Choisissez les points, puis démarrez la simulation.</p>
+        <div id="stats" class="stats">
+          <div class="stat-top"><span>Progression du trajet</span><span id="progress-value">0 %</span></div>
+          <div class="progress"><span id="progress-bar"></span></div>
+          <div class="progress-meta"><span id="remaining-distance">—</span><span id="remaining-time">—</span></div>
+          <div id="arrival-time" class="eta">—</div>
+        </div>
+        <div class="legend" aria-label="Légende du trajet"><span class="legend-item"><i class="legend-line"></i>Trajet complet</span><span class="legend-item"><i class="legend-line done"></i>Parcouru</span><span class="legend-item"><i class="legend-line left"></i>Restant</span></div>
+      </section>
+      <section class="panel map-panel"><div class="map-tip">Départ vert · arrivée corail · véhicule bleu</div><div id="map"></div><div id="map-error" class="map-error"><div><strong>Carte Google non configurée</strong>Ajoutez une clé navigateur dans GOOGLE_MAPS_API_KEY et activez Maps JavaScript API.</div></div></section>
+    </div>
+  </main>
+<script>
+  const pointData = {
+    origin: {lat:48.8566,lng:2.3522,fields:["origin-lat","origin-lng"],marker:null},
+    destination: {lat:48.8584,lng:2.2945,fields:["destination-lat","destination-lng"],marker:null},
+  };
+  let activePoint="origin", map, geometry, vehicleMarker, routeBaseLine, traveledLine, remainingLine, routePath=[], segmentLengths=[], totalMeters=0;
+  let routeDuration=0, simulatedBeforePause=0, runStartedAt=0, running=false, intervalId=null, speedFactor=60;
+  const $=id=>document.getElementById(id);
+  const message=$("message");
+
+  function setMessage(text,error=false) { message.textContent=text; message.classList.toggle("error",error); }
+  function pointPayload(name) { return {latitude:pointData[name].lat,longitude:pointData[name].lng}; }
+  function syncPoint(name) {
+    const point=pointData[name];
+    point.fields.forEach((id,index)=>$(id).value=(index===0?point.lat:point.lng).toFixed(6));
+    if(point.marker) point.marker.setPosition({lat:point.lat,lng:point.lng});
+  }
+  function readFields() {
+    for(const [name,point] of Object.entries(pointData)) {
+      const lat=Number($(point.fields[0]).value), lng=Number($(point.fields[1]).value);
+      if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180) throw new Error("Vérifiez les coordonnées GPS saisies.");
+      point.lat=lat; point.lng=lng;
+      if(point.marker) point.marker.setPosition({lat,lng});
+    }
+  }
+  for(const [name,point] of Object.entries(pointData)) point.fields.forEach((id,index)=>$(id).addEventListener("change",event=>{
+    const value=Number(event.target.value); if(!Number.isFinite(value)) return;
+    if(index===0) point.lat=value; else point.lng=value;
+    if(point.marker) point.marker.setPosition({lat:point.lat,lng:point.lng});
+  }));
+  function setActivePoint(name) {
+    activePoint=name;
+    document.querySelectorAll(".select-btn").forEach(button=>button.classList.toggle("active",button.dataset.point===name));
+  }
+  document.querySelectorAll(".select-btn").forEach(button=>button.addEventListener("click",()=>setActivePoint(button.dataset.point)));
+
+  function drawInitialRoute(path) {
+    if(routeBaseLine) routeBaseLine.setMap(null);
+    if(traveledLine) traveledLine.setMap(null);
+    if(remainingLine) remainingLine.setMap(null);
+    routeBaseLine=new google.maps.Polyline({map,path,strokeColor:"#b9c8c0",strokeOpacity:.9,strokeWeight:9,zIndex:1});
+    traveledLine=new google.maps.Polyline({map,path:[],strokeColor:"#147d55",strokeOpacity:1,strokeWeight:5,zIndex:3});
+    remainingLine=new google.maps.Polyline({map,path,strokeColor:"#3478f6",strokeOpacity:1,strokeWeight:5,zIndex:2});
+    routePath=path;
+    segmentLengths=[]; totalMeters=0;
+    for(let i=1;i<path.length;i++) { const length=geometry.spherical.computeDistanceBetween(path[i-1],path[i]); segmentLengths.push(length); totalMeters+=length; }
+    const bounds=new google.maps.LatLngBounds(); path.forEach(point=>bounds.extend(point)); map.fitBounds(bounds,60);
+  }
+  function positionAt(distance) {
+    if(routePath.length===1||totalMeters===0) return {position:routePath[routePath.length-1],passed:routePath.slice(0,1)};
+    let traversed=0;
+    for(let i=0;i<segmentLengths.length;i++) {
+      const length=segmentLengths[i];
+      if(distance<=traversed+length||i===segmentLengths.length-1) {
+        const ratio=length===0?1:Math.min(1,Math.max(0,(distance-traversed)/length));
+        const position=geometry.spherical.interpolate(routePath[i],routePath[i+1],ratio);
+        return {position,passed:[...routePath.slice(0,i+1),position],remaining:[position,...routePath.slice(i+1)]};
+      }
+      traversed+=length;
+    }
+    return {position:routePath[routePath.length-1],passed:routePath,remaining:[routePath[routePath.length-1]]};
+  }
+  function elapsedSimulationSeconds() { return simulatedBeforePause+(running?(Date.now()-runStartedAt)/1000*speedFactor:0); }
+  function formatDuration(seconds) {
+    const mins=Math.max(0,Math.ceil(seconds/60));
+    return mins<60?`${mins} min`:`${Math.floor(mins/60)} h ${mins%60} min`;
+  }
+  function renderProgress() {
+    if(!routePath.length) return;
+    const elapsed=Math.min(routeDuration,elapsedSimulationSeconds()), ratio=routeDuration===0?1:elapsed/routeDuration;
+    const distance=Math.min(totalMeters,totalMeters*ratio), progress=positionAt(distance);
+    vehicleMarker.setPosition(progress.position); traveledLine.setPath(progress.passed); remainingLine.setPath(progress.remaining);
+    const remainingSeconds=Math.max(0,routeDuration-elapsed), remainingMeters=Math.max(0,totalMeters-distance);
+    $("progress-value").textContent=`${Math.round(ratio*100)} %`;
+    $("progress-bar").style.width=`${ratio*100}%`;
+    $("remaining-distance").textContent=`${(remainingMeters/1000).toFixed(1).replace(".",",")} km restants`;
+    $("remaining-time").textContent=`${formatDuration(remainingSeconds/speedFactor)} simulées`;
+    $("arrival-time").textContent=remainingSeconds===0?"Véhicule arrivé":`Arrivée simulée vers ${new Intl.DateTimeFormat("fr-FR",{hour:"2-digit",minute:"2-digit"}).format(new Date(Date.now()+remainingSeconds/speedFactor*1000))}`;
+    if(ratio>=1) { stopTimer(); simulatedBeforePause=routeDuration; running=false; $("pause").disabled=true; $("pause").textContent="Mettre en pause"; setMessage("Simulation terminée : le véhicule est arrivé."); }
+  }
+  function stopTimer() { if(intervalId) clearInterval(intervalId); intervalId=null; }
+  function startTimer() { stopTimer(); intervalId=setInterval(renderProgress,Number($("interval").value)*1000); }
+  async function startSimulation() {
+    if(routePath.length&&!running&&simulatedBeforePause<routeDuration) {
+      running=true; runStartedAt=Date.now(); speedFactor=Number($("speed").value); startTimer(); $("pause").disabled=false; $("pause").textContent="Mettre en pause"; setMessage("Simulation en cours…"); return;
+    }
+    let data;
+    try {
+      readFields(); setMessage("Calcul de l’itinéraire…"); $("start").disabled=true;
+      const response=await fetch("/api/v1/eta",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({origin:pointPayload("origin"),destination:pointPayload("destination")})});
+      data=await response.json(); if(!response.ok) throw new Error(data.detail||"Le calcul de l’itinéraire a échoué.");
+      if(!data.encoded_polyline) throw new Error("L’API n’a pas renvoyé la géométrie du trajet.");
+      const path=geometry.encoding.decodePath(data.encoded_polyline); if(path.length<2) throw new Error("L’itinéraire renvoyé est incomplet.");
+      drawInitialRoute(path); routeDuration=Math.max(1,Number(data.duration_seconds));
+      simulatedBeforePause=0; speedFactor=Number($("speed").value); running=true; runStartedAt=Date.now(); vehicleMarker.setMap(map);
+      vehicleMarker.setPosition(path[0]); $("stats").classList.add("show"); $("pause").disabled=false; $("pause").textContent="Mettre en pause";
+      setMessage(`Simulation démarrée · durée réelle du trajet : ${formatDuration(routeDuration)}.`); renderProgress(); startTimer();
+    } catch(error) { setMessage(error.message,true); }
+    finally { $("start").disabled=false; }
+  }
+  $("start").addEventListener("click",startSimulation);
+  $("pause").addEventListener("click",()=>{
+    if(running) { simulatedBeforePause=elapsedSimulationSeconds(); running=false; stopTimer(); renderProgress(); $("pause").textContent="Reprendre"; setMessage("Simulation en pause."); }
+    else startSimulation();
+  });
+  $("reset").addEventListener("click",()=>{
+    stopTimer(); running=false; routePath=[]; simulatedBeforePause=0; routeDuration=0;
+    if(routeBaseLine) routeBaseLine.setMap(null); if(traveledLine) traveledLine.setMap(null); if(remainingLine) remainingLine.setMap(null); if(vehicleMarker) vehicleMarker.setMap(null);
+    routeBaseLine=null; traveledLine=null; remainingLine=null; $("stats").classList.remove("show"); $("pause").disabled=true; $("pause").textContent="Mettre en pause";
+    setMessage("Simulation réinitialisée. Choisissez les points puis démarrez.");
+  });
+  $("interval").addEventListener("change",()=>{ if(running) startTimer(); });
+  $("speed").addEventListener("change",()=>{
+    if(running) { simulatedBeforePause=elapsedSimulationSeconds(); runStartedAt=Date.now(); speedFactor=Number($("speed").value); renderProgress(); }
+    else speedFactor=Number($("speed").value);
+  });
+
+  async function initMap() {
+    try {
+      const {Map}=await google.maps.importLibrary("maps"), {Marker}=await google.maps.importLibrary("marker");
+      geometry=await google.maps.importLibrary("geometry");
+      map=new Map($("map"),{center:{lat:48.8566,lng:2.32},zoom:12,mapTypeControl:false,streetViewControl:false,fullscreenControl:true});
+      pointData.origin.marker=new Marker({map,position:{lat:pointData.origin.lat,lng:pointData.origin.lng},title:"Départ",icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:"#16865d",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}});
+      pointData.destination.marker=new Marker({map,position:{lat:pointData.destination.lat,lng:pointData.destination.lng},title:"Arrivée",icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:"#e06b50",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}});
+      vehicleMarker=new Marker({map,position:{lat:pointData.origin.lat,lng:pointData.origin.lng},title:"Véhicule",zIndex:10,icon:{path:google.maps.SymbolPath.CIRCLE,scale:8,fillColor:"#3478f6",fillOpacity:1,strokeColor:"#fff",strokeWeight:3}});
+      vehicleMarker.setMap(null);
+      const bounds=new google.maps.LatLngBounds(); bounds.extend(pointData.origin.marker.getPosition()); bounds.extend(pointData.destination.marker.getPosition()); map.fitBounds(bounds,70);
+      map.addListener("click",event=>{pointData[activePoint].lat=event.latLng.lat();pointData[activePoint].lng=event.latLng.lng();syncPoint(activePoint);});
+    } catch(error) { $("map-error").classList.add("show"); }
+  }
+  window.initMap=initMap;
+  async function loadMap() {
+    try {
+      const response=await fetch("/api/v1/config"),config=await response.json();
+      if(!config.google_maps_api_key) { $("map-error").classList.add("show"); return; }
+      const script=document.createElement("script");
+      script.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(config.google_maps_api_key)}&v=weekly&loading=async&callback=initMap`;
+      script.async=true; script.defer=true; script.onerror=()=>$("map-error").classList.add("show"); document.head.appendChild(script);
+    } catch(error) { $("map-error").classList.add("show"); }
+  }
+  loadMap();
+</script>
+</body>
+</html>
