@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GreenLine — Référence API</title>
+  <style>
+    :root { color-scheme:light; --green:#147d55; --ink:#18251f; --muted:#66746d; --line:#e0e8e3; --soft:#f4f8f5; --code:#17231d; }
+    * { box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body { margin:0; color:var(--ink); background:#f5f7f5; font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { min-height:66px; display:flex; align-items:center; gap:12px; padding:12px max(24px,calc((100vw - 1240px)/2)); background:#fff; border-bottom:1px solid var(--line); }
+    .brand { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:var(--green); font-weight:800; }
+    header strong { font-size:17px; } header span { color:var(--muted); font-size:13px; }
+    .nav { display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+    .nav a { padding:8px 11px; border:1px solid var(--line); border-radius:8px; color:var(--green); text-decoration:none; font-size:12px; font-weight:700; }
+    main { max-width:1240px; margin:0 auto; padding:38px 24px 64px; }
+    .intro { margin-bottom:23px; } .intro small { color:var(--green); font-weight:750; letter-spacing:.09em; text-transform:uppercase; }
+    h1 { margin:5px 0; font-size:32px; letter-spacing:-.035em; } .intro p { margin:0; max-width:780px; color:var(--muted); }
+    .quick-links { display:flex; gap:9px; flex-wrap:wrap; margin-top:15px; }
+    .quick-links a { padding:9px 12px; border-radius:8px; color:var(--green); background:#e9f5ee; text-decoration:none; font-size:13px; font-weight:750; }
+    .layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:22px; align-items:start; }
+    aside { position:sticky; top:18px; padding:16px; border:1px solid var(--line); border-radius:13px; background:#fff; }
+    aside strong { display:block; margin:0 0 8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
+    aside a { display:block; padding:7px 8px; border-radius:7px; color:#34463c; text-decoration:none; font-size:13px; }
+    aside a:hover { background:var(--soft); color:var(--green); }
+    .section-title { margin:26px 0 12px; font-size:19px; letter-spacing:-.02em; }
+    .endpoint { overflow:hidden; margin:0 0 15px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 3px 14px #18382908; scroll-margin-top:18px; }
+    .endpoint-head { display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line); }
+    .method { min-width:58px; padding:4px 7px; border-radius:6px; color:#0c6644; background:#e6f4eb; text-align:center; font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .path { font:700 14px ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; }
+    .endpoint-head p { margin:0 0 0 auto; color:var(--muted); font-size:12px; text-align:right; }
+    .endpoint-body { display:grid; grid-template-columns:minmax(190px,.72fr) minmax(0,1.28fr); gap:18px; padding:17px 18px 19px; }
+    h3 { margin:0 0 8px; font-size:13px; }
+    .param-note { margin:0 0 10px; color:var(--muted); font-size:12px; }
+    .param { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid #edf1ee; font-size:12px; }
+    .param:last-child { border-bottom:0; }
+    .param code { color:#264d3b; font-weight:700; }
+    .required { color:#ad493a; font-size:10px; font-weight:750; text-transform:uppercase; }
+    .optional { color:var(--muted); font-size:10px; }
+    pre { overflow:auto; margin:0; padding:13px 14px; border-radius:9px; color:#e9f3ec; background:var(--code); font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:2; }
+    .response-label { display:flex; align-items:center; gap:8px; margin:13px 0 7px; color:var(--muted); font-size:11px; font-weight:700; }
+    .http { padding:3px 6px; border-radius:5px; color:#0c6644; background:#e6f4eb; font:800 10px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .http.error { color:#a14536; background:#fff0ed; }
+    .note { margin:11px 0 0; color:var(--muted); font-size:11px; }
+    .schema { margin-top:22px; padding:18px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    .schema h2 { margin:0 0 5px; font-size:17px; } .schema p { margin:0 0 12px; color:var(--muted); font-size:13px; }
+    .schema-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+    .schema-grid div { padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:#fafcfb; }
+    .schema-grid code { color:var(--green); font-weight:750; font-size:12px; } .schema-grid span { display:block; margin-top:2px; color:var(--muted); font-size:11px; }
+    .web-pages { margin-top:22px; padding:18px; border-radius:14px; background:#eaf3ed; }
+    .web-pages h2 { margin:0 0 8px; font-size:16px; } .web-pages p { margin:4px 0; font-size:13px; }
+    .web-pages a { color:var(--green); font-weight:750; }
+    @media(max-width:850px) { main { padding:27px 16px 45px; } .layout { grid-template-columns:1fr; } aside { position:static; display:flex; flex-wrap:wrap; gap:4px; } aside strong { width:100%; } .endpoint-body { grid-template-columns:1fr; } .endpoint-head { flex-wrap:wrap; } .endpoint-head p { width:100%; margin-left:68px; text-align:left; } .schema-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:520px) { header { padding:12px 16px; flex-wrap:wrap; } .nav { width:100%; margin-left:46px; } h1 { font-size:27px; } .schema-grid { grid-template-columns:1fr 1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">G</div><strong>GreenLine</strong><span>Référence API</span>
+    <nav class="nav" aria-label="Navigation"><a href="/">Calcul ETA</a><a href="/route-tester">Adresses & parcs</a><a href="/telematics">Test télématique</a><a href="/token-management">Gestion tokens</a></nav>
+  </header>
+  <main>
+    <section class="intro">
+      <small>Documentation · API v1</small>
+      <h1>Référence des endpoints</h1>
+      <p>Routes disponibles, paramètres attendus, formats de réponse et erreurs connues. Les détails métier sont renvoyés dans <code>data</code> de l’enveloppe standard.</p>
+      <p class="note">Les appels ETA et télématique exigent un token GreenLine dans l’en-tête <code>X-API-Token</code> (ou <code>Authorization: Bearer</code>). Les limites sont appliquées par token, par endpoint et par journée UTC.</p>
+      <div class="quick-links"><a href="/docs">Ouvrir la documentation interactive ↗</a><a href="/openapi.json">Télécharger le schéma OpenAPI ↗</a></div>
+    </section>
+    <div class="layout">
+      <aside aria-label="Sommaire">
+        <strong>Routes JSON</strong>
+        <a href="#health">État de l’API</a>
+        <a href="#eta">Calcul d’ETA</a>
+        <a href="#geocode">Géocodifier une adresse</a>
+        <a href="#eta-locations">ETA adresse / parc</a>
+        <a href="#config">Configuration publique</a>
+        <a href="#check">Vérifier la télématique</a>
+        <a href="#positions">Dernières positions</a>
+        <a href="#admin">Gestion des accès</a>
+        <a href="#format">Format commun</a>
+      </aside>
+      <div>
+        <h2 class="section-title">Routes JSON</h2>
+        <article class="endpoint" id="health">
+          <div class="endpoint-head"><span class="method">GET</span><code class="path">/api/v1/health</code><p>État de l’API</p></div>
+          <div class="endpoint-body">
+            <section><h3>Paramètres</h3><p class="param-note">Aucun paramètre ni corps JSON.</p><div class="param"><code>—</code><span class="optional">Aucun</span></div></section>
+            <section><h3>Réponse</h3><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "L’API est opérationnelle.",
+  "errors": [],
+  "data": { "status": "ok" },
+  "pagination": null
+}</pre></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="geocode">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/geocode</code><p>Convertir une adresse en coordonnées GPS</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON requis</h3><div class="param"><code>address</code><span class="required">Adresse, 3 à 500 caractères</span></div><p class="note">Nécessite un token GreenLine et une clé serveur GOOGLE_GEOCODING_API_KEY.</p></section>
+            <section><h3>Exemple de requête</h3><pre>{ "address": "10 rue de Rivoli, Paris" }</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "Adresse convertie en coordonnées GPS.",
+  "errors": [],
+  "data": {
+    "formatted_address": "10 Rue de Rivoli, 75001 Paris, France",
+    "latitude": 48.8556,
+    "longitude": 2.3653
+  },
+  "pagination": null
+}</pre><p class="note">Erreurs possibles : 401 token manquant/invalide, 404 adresse introuvable, 422 corps invalide, 429 quota atteint, 502 Google indisponible, 503 clé non configurée.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="eta-locations">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/eta/locations</code><p>ETA entre adresses et/ou véhicules</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON requis</h3><p class="param-note">Pour origin et destination, fournissez exactement un champ : parc_id ou address.</p><div class="param"><code>origin.parc_id</code><span class="optional">Identifiant de parc</span></div><div class="param"><code>origin.address</code><span class="optional">Adresse</span></div><div class="param"><code>destination.parc_id / address</code><span class="required">Un seul requis</span></div><p class="note">Formats parc acceptés : PF-1233, ST-1233, CO-1233, ME-1233. Un parc doit être présent dans Hiboo et fournir une position GPS exploitable. Les adresses utilisent Google Geocoding.</p></section>
+            <section><h3>Exemple mixte</h3><pre>{
+  "origin": { "parc_id": "PF-1233" },
+  "destination": { "address": "10 rue de Rivoli, Paris" }
+}</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "ETA calculée à partir des deux emplacements.",
+  "errors": [],
+  "data": {
+    "eta_at": "2026-11-19T14:30:00Z",
+    "duration_seconds": 900,
+    "distance_meters": 4200,
+    "encoded_polyline": "...",
+    "origin": { "source_type": "parc_id", "source": "PF-1233", "latitude": 48.85, "longitude": 2.35 },
+    "destination": { "source_type": "address", "source": "10 Rue de Rivoli, Paris", "latitude": 48.85, "longitude": 2.36 }
+  },
+  "pagination": null
+}</pre><p class="note">Les quatre combinaisons parc/parc, parc/adresse, adresse/parc et adresse/adresse sont acceptées. Une télématique absente ou sans GPS renvoie 422. Les erreurs Google/Hiboo renvoient 502 ou 503.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="eta">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/eta</code><p>Calculer une ETA routière</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON requis</h3><p class="param-note">Coordonnées WGS84; latitude −90 à 90, longitude −180 à 180.</p><div class="param"><code>origin.latitude</code><span class="required">Requis</span></div><div class="param"><code>origin.longitude</code><span class="required">Requis</span></div><div class="param"><code>destination.latitude</code><span class="required">Requis</span></div><div class="param"><code>destination.longitude</code><span class="required">Requis</span></div></section>
+            <section><h3>Exemple de requête</h3><pre>{
+  "origin": { "latitude": 48.8566, "longitude": 2.3522 },
+  "destination": { "latitude": 48.8584, "longitude": 2.2945 }
+}</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "ETA calculée avec succès.",
+  "errors": [],
+  "data": {
+    "eta_at": "2026-11-19T14:30:00Z",
+    "duration_seconds": 900,
+    "distance_meters": 4200,
+    "encoded_polyline": "..."
+  },
+  "pagination": null
+}</pre><p class="note">Erreurs possibles : 401 token manquant ou invalide, 404 aucun itinéraire, 422 paramètres invalides, 429 quota atteint, 502 erreur du service Google, 503 identifiants Google absents.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="config">
+          <div class="endpoint-head"><span class="method">GET</span><code class="path">/api/v1/config</code><p>Configuration publique de l’interface</p></div>
+          <div class="endpoint-body">
+            <section><h3>Paramètres</h3><p class="param-note">Aucun paramètre ni corps JSON.</p><div class="param"><code>—</code><span class="optional">Aucun</span></div></section>
+            <section><h3>Réponse</h3><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "Configuration publique récupérée.",
+  "errors": [],
+  "data": { "google_maps_api_key": "… ou null" },
+  "pagination": null
+}</pre><p class="note">Cette clé est destinée à Maps JavaScript côté navigateur.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="check">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/telematics/check</code><p>Vérifier la présence dans Hiboo</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON</h3><p class="param-note">Renseignez l’un des deux champs. Les listes acceptent jusqu’à 100 véhicules.</p><div class="param"><code>parc_id</code><span class="optional">Un identifiant</span></div><div class="param"><code>parc_ids</code><span class="optional">Liste d’identifiants</span></div><p class="note">Formats acceptés : PF-1233, ST-1233, CO-1233, ME-1233. La casse est normalisée.</p></section>
+            <section><h3>Exemple de requête</h3><pre>{ "parc_ids": ["PF-1233", "ST-1233"] }</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "Vérification télématique effectuée.",
+  "errors": [],
+  "data": { "vehicles": [
+    { "parc_id": "PF-1233", "equipped": true, "equipment_id": 1 },
+    { "parc_id": "ST-1233", "equipped": false, "equipment_id": null }
+  ] },
+  "pagination": null
+}</pre><p class="note">Erreurs possibles : 401 token manquant ou invalide, 422 identifiant invalide, 429 quota atteint, 502 Hiboo indisponible, 503 identifiants Hiboo non configurés.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="positions">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/telematics/positions</code><p>Récupérer les dernières positions GPS</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON</h3><p class="param-note">Identique à la vérification télématique.</p><div class="param"><code>parc_id</code><span class="optional">Un identifiant</span></div><div class="param"><code>parc_ids</code><span class="optional">Liste, maximum 100</span></div><p class="note">Les véhicules absents de Hiboo retournent <code>equipped: false</code> et <code>position: null</code>.</p></section>
+            <section><h3>Exemple de requête</h3><pre>{ "parc_id": "PF-1233" }</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "Dernières positions récupérées.",
+  "errors": [],
+  "data": { "vehicles": [{
+    "parc_id": "PF-1233",
+    "equipped": true,
+    "position": {
+      "date": "2026-11-19T14:25:00Z",
+      "latitude": 48.8566,
+      "longitude": 2.3522,
+      "altitude": null,
+      "speed": 0,
+      "heading": null
+    }
+  }] },
+  "pagination": null
+}</pre><p class="note">Un véhicule équipé sans relevé GPS retourne <code>equipped: true</code> et <code>position: null</code>. Erreurs possibles : 401, 422, 429, 502, 503.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="admin">
+          <div class="endpoint-head"><span class="method">ADMIN</span><code class="path">/api/v1/admin/*</code><p>Gestion protégée par X-Admin-Token</p></div>
+          <div class="endpoint-body">
+            <section><h3>Routes de gestion</h3><div class="param"><code>GET /tokens</code><span class="optional">Lister les tokens</span></div><div class="param"><code>POST /tokens</code><span class="optional">Créer { name }</span></div><div class="param"><code>POST /tokens/{id}/revoke</code><span class="optional">Révoquer un token</span></div><div class="param"><code>GET /usage?date=YYYY-MM-DD</code><span class="optional">Consulter les compteurs UTC</span></div><div class="param"><code>GET /limits</code><span class="optional">Lire les quotas</span></div><div class="param"><code>PUT /limits</code><span class="optional">Modifier les quotas</span></div><p class="note">Le token administrateur est défini par <code>API_ADMIN_TOKEN</code>. Les routes sont aussi documentées dans Swagger.</p></section>
+            <section><h3>Configurer les limites</h3><pre>{
+  "default_daily_limit": 1000,
+  "endpoint_limits": {
+    "/api/v1/eta": 2000,
+    "/api/v1/telematics/check": null
+  }
+}</pre><p class="note">Une valeur null supprime la surcharge de route et rétablit la limite générale. Le quota est appliqué séparément à chaque token et endpoint.</p></section>
+          </div>
+        </article>
+
+        <section class="schema" id="format">
+          <h2>Format commun des réponses</h2>
+          <p>Toutes les routes JSON utilisent la même enveloppe. Les réponses d’erreur conservent leur code HTTP et remplissent <code>errors</code>.</p>
+          <div class="schema-grid">
+            <div><code>message</code><span>Résumé lisible du résultat</span></div>
+            <div><code>errors</code><span>Liste vide en cas de succès</span></div>
+            <div><code>data</code><span>Données métier, ou null en erreur</span></div>
+            <div><code>pagination</code><span>Métadonnées, ou null si non paginé</span></div>
+          </div>
+          <div class="response-label"><span class="http error">422</span> Exemple d’erreur de validation</div>
+          <pre>{
+  "message": "Les données envoyées sont invalides.",
+  "errors": [{
+    "code": "value_error",
+    "message": "Chaque parc_id doit respecter le format attendu.",
+    "field": "body"
+  }],
+  "data": null,
+  "pagination": null
+}</pre>
+        </section>
+      </div>
+    </div>
+    <section class="web-pages">
+      <h2>Pages de l’application</h2>
+      <p><a href="/">/</a> — outil ETA · <a href="/route-tester">/route-tester</a> — adresses, parcs et simulation dynamique · <a href="/live">/live</a> — simulation GPS · <a href="/telematics">/telematics</a> — test Hiboo · <a href="/token-management">/token-management</a> — administration des accès.</p>
+    </section>
+  </main>
+</body>
+</html>

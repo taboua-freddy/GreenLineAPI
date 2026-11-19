@@ -10,5 +10,8 @@ credentials/
 .ruff_cache/
 .coverage
 htmlcov/
+*.db
+*.sqlite
+*.sqlite3
 dist/
 build/

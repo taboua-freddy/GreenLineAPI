@@ -6,6 +6,8 @@ services:
     environment:
       APP_ENV: development
       DATABASE_URL: postgresql+asyncpg://greenline:greenline@db:5432/greenline
+      API_ADMIN_TOKEN: ${API_ADMIN_TOKEN:-}
+      API_DAILY_LIMIT_DEFAULT: ${API_DAILY_LIMIT_DEFAULT:-1000}
       GOOGLE_APPLICATION_CREDENTIALS: /run/google/application_default_credentials.json
     volumes:
       - type: bind

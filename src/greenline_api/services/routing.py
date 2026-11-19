@@ -1,4 +1,9 @@
 from functools import lru_cache
+from typing import Any
+
+import httpx
+
+from greenline_api.core.config import get_settings
 
 from google.maps import routing_v2
 
@@ -7,6 +12,63 @@ FIELD_MASK = "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyl
 
 class RouteNotFoundError(Exception):
     """Signale que Google Routes n’a trouvé aucun itinéraire entre les deux points."""
+
+
+class GeocodingError(Exception):
+    """Signale un échec de géocodification ou une adresse introuvable."""
+
+
+class GeocodingNotFoundError(GeocodingError):
+    """Aucun résultat géographique ne correspond à l’adresse demandée."""
+
+
+class GeocodingConfigurationError(GeocodingError):
+    """La clé Google Geocoding n’est pas configurée."""
+
+
+async def geocode_address(address: str) -> dict[str, Any]:
+    """Convertit une adresse en coordonnées avec l’API Google Geocoding."""
+    settings = get_settings()
+    api_key = settings.google_geocoding_api_key
+    if not api_key:
+        raise GeocodingConfigurationError("La clé Google Geocoding n’est pas configurée.")
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0)) as client:
+            response = await client.get(
+                "https://maps.googleapis.com/maps/api/geocode/json",
+                params={"address": address, "key": api_key},
+            )
+            response.raise_for_status()
+            payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise GeocodingError("Le service Google Geocoding est indisponible.") from exc
+
+    if not isinstance(payload, dict):
+        raise GeocodingError("La réponse Google Geocoding est invalide.")
+    status = payload.get("status")
+    if status == "ZERO_RESULTS":
+        raise GeocodingNotFoundError("Aucun résultat pour cette adresse.")
+    if status != "OK":
+        message = payload.get("error_message")
+        raise GeocodingError(
+            str(message) if isinstance(message, str) else "Google Geocoding a refusé la requête."
+        )
+    results = payload.get("results")
+    first = results[0] if isinstance(results, list) and results else None
+    geometry = first.get("geometry") if isinstance(first, dict) else None
+    location = geometry.get("location") if isinstance(geometry, dict) else None
+    if not isinstance(location, dict) or not isinstance(first.get("formatted_address"), str):
+        raise GeocodingError("Google Geocoding a renvoyé un résultat incomplet.")
+    try:
+        latitude, longitude = float(location["lat"]), float(location["lng"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise GeocodingError("Les coordonnées de l’adresse sont invalides.") from exc
+    return {
+        "formatted_address": first["formatted_address"],
+        "latitude": latitude,
+        "longitude": longitude,
+    }
 
 
 @lru_cache(maxsize=1)

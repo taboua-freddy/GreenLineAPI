@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GreenLine — Gestion des accès API</title>
+  <style>
+    :root { color-scheme:light; --green:#147d55; --ink:#18251f; --muted:#66746d; --line:#e0e8e3; --soft:#f4f8f5; --red:#b33d30; --amber:#91610a; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:#f5f7f5; font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    header { min-height:66px; display:flex; align-items:center; gap:12px; padding:12px max(24px,calc((100vw - 1140px)/2)); background:#fff; border-bottom:1px solid var(--line); }
+    .brand { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:var(--green); font-weight:800; }
+    header strong { font-size:17px; } header span { color:var(--muted); font-size:13px; }
+    nav { display:flex; gap:8px; margin-left:auto; flex-wrap:wrap; }
+    nav a { padding:8px 11px; border:1px solid var(--line); border-radius:8px; color:var(--green); text-decoration:none; font-size:12px; font-weight:700; }
+    main { max-width:1140px; margin:0 auto; padding:34px 24px 54px; }
+    .intro { margin-bottom:20px; } .intro small { color:var(--green); font-weight:750; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:5px 0; font-size:30px; letter-spacing:-.035em; } .intro p { margin:0; color:var(--muted); }
+    .panel { margin:0 0 16px; padding:19px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 3px 14px #18382908; }
+    h2 { margin:0 0 5px; font-size:17px; } .hint { margin:0 0 13px; color:var(--muted); font-size:12px; }
+    label { display:block; margin:0 0 4px; color:#43534a; font-size:12px; font-weight:700; }
+    input { width:100%; padding:9px 10px; border:1px solid #cfdad3; border-radius:8px; color:var(--ink); background:#fff; font:13px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    input:focus { outline:2px solid #a5d6ba; border-color:var(--green); }
+    .connect-grid { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+    .form-row { display:flex; gap:9px; align-items:end; flex-wrap:wrap; }
+    .form-row > div { flex:1; min-width:180px; }
+    button { padding:9px 13px; border:0; border-radius:8px; color:#fff; background:var(--green); font:inherit; font-size:13px; font-weight:750; cursor:pointer; }
+    button:hover { background:#0f6847; } button:disabled { opacity:.55; cursor:wait; }
+    button.secondary { color:#43534a; background:#fff; border:1px solid var(--line); }
+    button.danger { color:#a4392c; background:#fff0ed; border:1px solid #f2cbc4; }
+    #global-status { min-height:20px; margin:8px 0 0; font-size:13px; color:var(--muted); }
+    #global-status.error { color:var(--red); } #global-status.success { color:var(--green); }
+    .notice { display:none; margin-top:12px; padding:12px; border:1px solid #cce3d4; border-radius:9px; background:#f0f8f3; }
+    .notice.show { display:block; } .notice strong { display:block; color:var(--green); font-size:12px; }
+    .secret-line { display:flex; gap:8px; margin-top:6px; } .secret-line code { flex:1; overflow-wrap:anywhere; padding:9px; border-radius:7px; color:#eef8f1; background:#17231d; font-size:12px; }
+    .section-top { display:flex; justify-content:space-between; gap:12px; align-items:start; margin-bottom:13px; }
+    .section-top button { white-space:nowrap; }
+    .table-wrap { overflow:auto; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th { padding:9px 8px; color:var(--muted); background:#f7f9f7; text-align:left; font-size:10px; letter-spacing:.04em; text-transform:uppercase; white-space:nowrap; }
+    td { padding:10px 8px; border-bottom:1px solid #edf1ee; vertical-align:middle; }
+    td code { font:11px ui-monospace,SFMono-Regular,Consolas,monospace; }
+    .badge { display:inline-flex; padding:4px 7px; border-radius:999px; font-size:10px; font-weight:750; }
+    .badge.active { color:#13734e; background:#e9f5ee; } .badge.revoked { color:#a4392c; background:#fff0ed; }
+    .empty { padding:14px; color:var(--muted); background:#fafcfb; border:1px dashed var(--line); border-radius:9px; text-align:center; font-size:12px; }
+    .quota-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .quota-card { padding:11px; border:1px solid var(--line); border-radius:9px; background:#fafcfb; }
+    .quota-card code { display:block; margin-bottom:8px; font-size:11px; font-weight:700; overflow-wrap:anywhere; }
+    .quota-card small { display:block; margin-top:4px; color:var(--muted); font-size:10px; }
+    .token-input { max-width:380px; }
+    @media(max-width:720px) { main { padding:24px 15px 40px; } header { padding:12px 15px; flex-wrap:wrap; } nav { width:100%; margin-left:46px; } .connect-grid { grid-template-columns:1fr; } .connect-grid button { width:100%; } .quota-grid { grid-template-columns:1fr; } .section-top { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">G</div><strong>GreenLine</strong><span>Gestion des accès API</span>
+    <nav aria-label="Navigation"><a href="/api-reference">Référence API</a><a href="/">Calcul ETA</a></nav>
+  </header>
+  <main>
+    <section class="intro"><small>Administration · Sécurité</small><h1>Tokens et quotas API</h1><p>Créez et révoquez les accès, consultez leur activité et configurez les limites journalières par endpoint.</p></section>
+
+    <section class="panel">
+      <h2>Accès administrateur</h2>
+      <p class="hint">Renseignez la valeur de <code>API_ADMIN_TOKEN</code>. Elle reste dans cet onglet et n’est jamais enregistrée par l’API.</p>
+      <div class="connect-grid"><div><label for="admin-token">Token administrateur</label><input id="admin-token" class="token-input" type="password" autocomplete="current-password" placeholder="API_ADMIN_TOKEN"></div><button id="connect-button" type="button">Se connecter</button></div>
+      <p id="global-status" role="status">L’interface est verrouillée jusqu’à la connexion.</p>
+      <div id="created-token" class="notice" role="status"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Créer un token d’accès</h2><p class="hint">Le token complet n’est affiché qu’une seule fois. Seul son hash est conservé.</p></div></div>
+      <div class="form-row"><div><label for="token-name">Nom de l’application ou de l’intégration</label><input id="token-name" maxlength="100" placeholder="Ex. application logistique"></div><button id="create-button" type="button" disabled>Créer le token</button></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Tokens enregistrés</h2><p class="hint">Les tokens révoqués sont refusés immédiatement.</p></div><button id="refresh-tokens" class="secondary" type="button" disabled>Actualiser</button></div>
+      <div id="tokens-table" class="empty">Connectez-vous pour afficher les tokens.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Utilisation journalière</h2><p class="hint">Compteurs en UTC, par token et par endpoint. Les refus de quota sont indiqués séparément.</p></div><button id="refresh-usage" class="secondary" type="button" disabled>Actualiser</button></div>
+      <div class="form-row" style="margin-bottom:12px"><div style="max-width:230px"><label for="usage-date">Journée (UTC)</label><input id="usage-date" type="date"></div></div>
+      <div id="usage-table" class="empty">Connectez-vous pour afficher l’utilisation.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Limites journalières</h2><p class="hint">Une limite spécifique remplace la limite générale. Laissez le champ vide pour hériter de la limite générale.</p></div><button id="save-limits" type="button" disabled>Enregistrer les quotas</button></div>
+      <div class="form-row" style="margin-bottom:14px"><div style="max-width:280px"><label for="default-limit">Limite générale par token et par endpoint</label><input id="default-limit" type="number" min="1" step="1" value="1000"><small>Requêtes autorisées par jour</small></div></div>
+      <div id="quota-grid" class="quota-grid"><div class="empty">Connectez-vous pour charger les quotas.</div></div>
+    </section>
+  </main>
+<script>
+  const $ = id => document.getElementById(id);
+  const adminInput = $("admin-token");
+  adminInput.value = sessionStorage.getItem("greenlineAdminToken") || "";
+  $("usage-date").value = new Date().toISOString().slice(0, 10);
+  let endpointRows = [];
+
+  function setStatus(message, type = "") {
+    $("global-status").textContent = message;
+    $("global-status").className = type;
+  }
+
+  async function adminRequest(path, options = {}) {
+    const response = await fetch(`/api/v1/admin${path}`, {
+      ...options,
+      headers: {"X-Admin-Token": adminInput.value.trim(), ...(options.headers || {})},
+    });
+    const envelope = await response.json();
+    if (!response.ok) throw new Error(envelope.message || `Erreur HTTP ${response.status}`);
+    return envelope;
+  }
+
+  function setConnected(connected) {
+    for (const id of ["create-button", "refresh-tokens", "refresh-usage", "save-limits"]) $(id).disabled = !connected;
+  }
+
+  function createTable(headers, rows) {
+    const table = document.createElement("table");
+    const thead = document.createElement("thead"), headerRow = document.createElement("tr");
+    headers.forEach(text => { const th = document.createElement("th"); th.textContent = text; headerRow.append(th); });
+    thead.append(headerRow); table.append(thead);
+    const tbody = document.createElement("tbody");
+    rows.forEach(cells => { const tr = document.createElement("tr"); cells.forEach(cell => { const td = document.createElement("td"); if (cell instanceof Node) td.append(cell); else td.textContent = cell ?? "—"; tr.append(td); }); tbody.append(tr); });
+    table.append(tbody); return table;
+  }
+
+  async function loadTokens() {
+    const envelope = await adminRequest("/tokens");
+    const tokens = envelope.data.tokens;
+    if (!tokens.length) { $("tokens-table").className = "empty"; $("tokens-table").textContent = "Aucun token pour le moment."; return; }
+    const rows = tokens.map(token => {
+      const state = document.createElement("span"); state.className = `badge ${token.revoked_at ? "revoked" : "active"}`; state.textContent = token.revoked_at ? "Révoqué" : "Actif";
+      const actions = document.createElement("span");
+      if (!token.revoked_at) {
+        const button = document.createElement("button"); button.className = "danger"; button.textContent = "Révoquer";
+        button.addEventListener("click", () => revokeToken(token)); actions.append(button);
+      } else actions.textContent = "—";
+      return [token.id, token.name, token.prefix, token.requests_today, token.last_used_at ? new Date(token.last_used_at).toLocaleString("fr-FR") : "Jamais", state, actions];
+    });
+    const table = createTable(["ID", "Nom", "Préfixe", "Req. aujourd’hui", "Dernier usage", "État", "Action"], rows);
+    $("tokens-table").className = "table-wrap"; $("tokens-table").replaceChildren(table);
+  }
+
+  async function revokeToken(token) {
+    if (!confirm(`Révoquer le token « ${token.name} » ? Les appels suivants seront refusés.`)) return;
+    try { await adminRequest(`/tokens/${token.id}/revoke`, {method:"POST"}); setStatus(`Token « ${token.name} » révoqué.`, "success"); await loadTokens(); }
+    catch (error) { setStatus(error.message, "error"); }
+  }
+
+  async function loadUsage() {
+    const date = $("usage-date").value;
+    const envelope = await adminRequest(`/usage?date=${encodeURIComponent(date)}`);
+    const rows = envelope.data.rows;
+    if (!rows.length) { $("usage-table").className = "empty"; $("usage-table").textContent = "Aucune requête comptabilisée pour cette journée."; return; }
+    const table = createTable(["Token", "Préfixe", "Endpoint", "Requêtes admises", "Refus quota"], rows.map(row => [row.token_name, row.token_prefix, row.endpoint, row.request_count, row.rejected_count]));
+    $("usage-table").className = "table-wrap"; $("usage-table").replaceChildren(table);
+  }
+
+  async function loadLimits() {
+    const envelope = await adminRequest("/limits");
+    const limits = envelope.data;
+    $("default-limit").value = limits.default_daily_limit;
+    endpointRows = limits.endpoints;
+    const grid = $("quota-grid"); grid.replaceChildren();
+    for (const endpoint of endpointRows) {
+      const card = document.createElement("div"); card.className = "quota-card";
+      const name = document.createElement("code"); name.textContent = `${endpoint.method} ${endpoint.endpoint}`;
+      const label = document.createElement("label"); label.textContent = "Limite personnalisée";
+      const input = document.createElement("input"); input.type = "number"; input.min = "1"; input.step = "1"; input.dataset.endpoint = endpoint.endpoint;
+      input.placeholder = `Par défaut : ${limits.default_daily_limit}`; input.value = endpoint.limit_override ?? "";
+      const note = document.createElement("small"); note.textContent = `Limite active : ${endpoint.effective_daily_limit} requêtes / jour`;
+      card.append(name, label, input, note); grid.append(card);
+    }
+  }
+
+  async function connect() {
+    sessionStorage.setItem("greenlineAdminToken", adminInput.value.trim());
+    setStatus("Vérification des accès…");
+    try {
+      await Promise.all([loadTokens(), loadUsage(), loadLimits()]);
+      setConnected(true); setStatus("Connecté à l’administration API.", "success");
+    } catch (error) { setConnected(false); setStatus(error.message, "error"); }
+  }
+
+  $("connect-button").addEventListener("click", connect);
+  $("create-button").addEventListener("click", async () => {
+    const name = $("token-name").value.trim();
+    if (!name) { setStatus("Donnez un nom à ce token.", "error"); return; }
+    try {
+      const envelope = await adminRequest("/tokens", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({name})});
+      const token = envelope.data.token;
+      const notice = $("created-token"); notice.className = "notice show"; notice.replaceChildren();
+      const title = document.createElement("strong"); title.textContent = "Token créé — copiez-le maintenant, il ne sera plus affiché.";
+      const line = document.createElement("div"); line.className = "secret-line";
+      const value = document.createElement("code"); value.textContent = token.token;
+      const copy = document.createElement("button"); copy.className = "secondary"; copy.textContent = "Copier";
+      copy.addEventListener("click", async () => { await navigator.clipboard.writeText(token.token); copy.textContent = "Copié"; });
+      line.append(value, copy); notice.append(title, line); $("token-name").value = "";
+      setStatus("Token créé avec succès.", "success"); await loadTokens();
+    } catch (error) { setStatus(error.message, "error"); }
+  });
+  $("refresh-tokens").addEventListener("click", () => loadTokens().catch(error => setStatus(error.message, "error")));
+  $("refresh-usage").addEventListener("click", () => loadUsage().catch(error => setStatus(error.message, "error")));
+  $("usage-date").addEventListener("change", () => loadUsage().catch(error => setStatus(error.message, "error")));
+  $("save-limits").addEventListener("click", async () => {
+    const defaultLimit = Number($("default-limit").value);
+    if (!Number.isInteger(defaultLimit) || defaultLimit < 1) { setStatus("La limite générale doit être un entier positif.", "error"); return; }
+    const endpointLimits = {};
+    for (const input of $("quota-grid").querySelectorAll("input[data-endpoint]")) {
+      if (input.value.trim() === "") endpointLimits[input.dataset.endpoint] = null;
+      else {
+        const value = Number(input.value);
+        if (!Number.isInteger(value) || value < 1) { setStatus("Chaque limite doit être un entier positif ou vide.", "error"); return; }
+        endpointLimits[input.dataset.endpoint] = value;
+      }
+    }
+    try {
+      await adminRequest("/limits", {method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify({default_daily_limit:defaultLimit,endpoint_limits:endpointLimits})});
+      await loadLimits(); setStatus("Quotas enregistrés.", "success");
+    } catch (error) { setStatus(error.message, "error"); }
+  });
+</script>
+</body>
+</html>
