@@ -1,0 +1,14 @@
+.location-page{max-width:850px;margin:0 auto;padding:34px 24px 56px}
+.intro{margin-bottom:20px}.intro small{color:var(--green);font-weight:750;letter-spacing:.08em;text-transform:uppercase}
+.intro h1{margin:5px 0;font-size:30px;letter-spacing:-.03em}.intro p{margin:0;color:var(--muted)}
+.panel{padding:22px;background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 3px 14px #18382908}
+.form-panel label{display:block;margin:0 0 5px;color:var(--muted);font-size:12px;font-weight:650}
+.form-panel input{width:100%;padding:11px;border:1px solid var(--line);border-radius:8px;font:14px ui-monospace,SFMono-Regular,Consolas,monospace;color:var(--ink);background:#fff;margin-bottom:10px}
+.form-panel input:focus{outline:2px solid #a5d6ba;border-color:var(--green)}
+.hint{margin:2px 0 16px;color:var(--muted);font-size:13px}.hint a{color:var(--green);font-weight:700;text-decoration:none}
+.actions{display:flex;gap:9px;margin-top:5px}.primary{padding:11px 15px;border:0;border-radius:8px;background:var(--green);color:#fff;font:inherit;font-weight:700;cursor:pointer}.primary:disabled{opacity:.6;cursor:wait}
+.status{min-height:20px;margin:11px 0 0;color:var(--muted);font-size:13px}.status.error{color:#b33d30}
+.result{margin-top:16px}.result[hidden]{display:none}.result-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}.result-heading small,.coordinates small{color:var(--muted);font-size:11px}.result-heading h2{margin:1px 0;font-size:20px}.badge{padding:5px 9px;border-radius:99px;background:#e6f4eb;color:#0c6644;font-size:12px;font-weight:700}
+.address{margin:13px 0;color:var(--ink);font-size:17px;font-weight:650}.coordinates{display:grid;grid-template-columns:1fr 1fr;gap:10px}.coordinates>div{padding:12px;border:1px solid var(--line);border-radius:9px;background:#fafcfb}.coordinates strong{display:block;margin-top:4px;font:14px ui-monospace,SFMono-Regular,Consolas,monospace}
+.map-link{display:inline-block;margin:4px 0 12px;color:var(--green);font-weight:700;text-decoration:none}.raw-panel{margin-top:16px}.raw-panel summary{cursor:pointer;font-size:13px;font-weight:700}.raw-panel pre{overflow:auto;margin:12px 0 0;padding:12px;border-radius:8px;background:#17231d;color:#e9f3ec;font:12px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace}
+@media(max-width:600px){.location-page{padding:24px 16px}.panel{padding:17px}.intro h1{font-size:25px}}

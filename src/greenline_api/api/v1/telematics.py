@@ -12,6 +12,12 @@ from greenline_api.services.hiboo import (
     HibooConfigurationError,
     hiboo_client,
 )
+from greenline_api.services.routing import (
+    GeocodingConfigurationError,
+    GeocodingError,
+    GeocodingNotFoundError,
+    reverse_geocode_coordinates,
+)
 
 router = APIRouter(
     prefix="/telematics",
@@ -78,6 +84,28 @@ class VehiclePosition(BaseModel):
 
 class VehiclePositionsData(BaseModel):
     vehicles: list[VehiclePosition]
+
+
+class ParcLocationRequest(BaseModel):
+    parc_id: str = Field(examples=["PF-1233"])
+
+    @model_validator(mode="after")
+    def validate_parc_id(self) -> "ParcLocationRequest":
+        self.parc_id = self.parc_id.strip().upper()
+        if not _is_valid_parc_id(self.parc_id):
+            raise ValueError(
+                "Le parc_id doit respecter le format PF-1233, ST-1233, CO-1233 ou ME-1233."
+            )
+        return self
+
+
+class ParcLocationData(BaseModel):
+    parc_id: str
+    equipped: bool
+    address: str
+    latitude: float
+    longitude: float
+    position_date: datetime | None
 
 
 def _as_position(position: dict[str, Any] | None) -> GpsPosition | None:
@@ -182,5 +210,57 @@ async def latest_positions(payload: ParcIdsRequest) -> ApiResponse[VehiclePositi
         message="Dernières positions récupérées.",
         errors=[],
         data=VehiclePositionsData(vehicles=vehicles),
+        pagination=None,
+    )
+
+
+@router.post(
+    "/location",
+    response_model=ApiResponse[ParcLocationData],
+    summary="Récupérer l’adresse et les coordonnées d’un véhicule",
+    responses={401: ERROR_RESPONSE, 404: ERROR_RESPONSE, 422: ERROR_RESPONSE, 429: ERROR_RESPONSE, 502: ERROR_RESPONSE, 503: ERROR_RESPONSE},
+)
+async def parc_location(payload: ParcLocationRequest) -> ApiResponse[ParcLocationData]:
+    """Récupère le dernier GPS Hiboo puis le convertit en adresse lisible."""
+    try:
+        equipment = (await hiboo_client.get_equipments()).get(payload.parc_id)
+        if equipment is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Le véhicule {payload.parc_id} n’est pas équipé en télématique Hiboo.",
+            )
+        equipment_id = equipment.get("id")
+        if not isinstance(equipment_id, int):
+            raise HibooAPIError("L’identifiant d’équipement Hiboo est invalide.")
+        raw_position = await hiboo_client.get_latest_position(equipment_id)
+        position = _as_position(raw_position)
+        if position is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Aucune position GPS disponible pour {payload.parc_id}.",
+            )
+        address = await reverse_geocode_coordinates(position.latitude, position.longitude)
+    except HTTPException:
+        raise
+    except (HibooConfigurationError, HibooAPIError) as exc:
+        raise _map_hiboo_error(exc) from exc
+    except GeocodingNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except GeocodingConfigurationError as exc:
+        raise HTTPException(status_code=503, detail="La clé Google Geocoding n’est pas configurée.") from exc
+    except GeocodingError as exc:
+        raise HTTPException(status_code=502, detail="La recherche d’adresse à partir du GPS a échoué.") from exc
+
+    return ApiResponse(
+        message="Adresse et coordonnées du véhicule récupérées.",
+        errors=[],
+        data=ParcLocationData(
+            parc_id=payload.parc_id,
+            equipped=True,
+            address=address,
+            latitude=position.latitude,
+            longitude=position.longitude,
+            position_date=position.date,
+        ),
         pagination=None,
     )

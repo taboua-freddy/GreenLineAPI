@@ -128,3 +128,56 @@ async def clear_hiboo_equipment_refresh() -> None:
             delete(HibooEquipmentRefreshRecord).where(HibooEquipmentRefreshRecord.id == 1)
         )
         await session.commit()
+
+
+async def save_route_map_image(
+    image_id: str,
+    image: bytes,
+    content_type: str,
+    expires_at: datetime,
+) -> None:
+    from greenline_api.db.access_models import RouteMapImageRecord
+
+    async with _session_factory() as session:
+        session.add(
+            RouteMapImageRecord(
+                id=image_id,
+                image=image,
+                content_type=content_type,
+                expires_at=expires_at,
+            )
+        )
+        await session.commit()
+
+
+async def load_route_map_image(image_id: str) -> tuple[bytes, str, datetime] | None:
+    from greenline_api.db.access_models import RouteMapImageRecord
+
+    async with _session_factory() as session:
+        record = await session.get(RouteMapImageRecord, image_id)
+        if record is None:
+            return None
+        return record.image, record.content_type, record.expires_at
+
+
+async def delete_expired_route_map_images(now: datetime) -> int:
+    from sqlalchemy import delete
+
+    from greenline_api.db.access_models import RouteMapImageRecord
+
+    async with _session_factory() as session:
+        result = await session.execute(
+            delete(RouteMapImageRecord).where(RouteMapImageRecord.expires_at <= now)
+        )
+        await session.commit()
+        return int(result.rowcount or 0)
+
+
+async def delete_route_map_image(image_id: str) -> None:
+    from sqlalchemy import delete
+
+    from greenline_api.db.access_models import RouteMapImageRecord
+
+    async with _session_factory() as session:
+        await session.execute(delete(RouteMapImageRecord).where(RouteMapImageRecord.id == image_id))
+        await session.commit()

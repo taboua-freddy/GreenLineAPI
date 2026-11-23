@@ -1,3 +1,5 @@
+import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -15,15 +17,18 @@ from greenline_api.api.v1.admin import router as admin_router
 from greenline_api.api.v1.config import router as config_router
 from greenline_api.api.v1.eta import router as eta_router
 from greenline_api.api.v1.health import router as health_router
+from greenline_api.api.v1.maps import router as maps_router
 from greenline_api.api.v1.telematics import router as telematics_router
 from greenline_api.api.responses import ApiError, ApiResponse
 from greenline_api.core.config import get_settings
 from greenline_api.db.session import dispose_engine
 from greenline_api.services.api_access import init_api_access_schema
 from greenline_api.services.hiboo import close_hiboo_client, hiboo_client
+from greenline_api.services.route_maps import cleanup_expired_route_maps, route_map_cleanup_loop
 from greenline_api.services.routing import close_routing_client
 
 settings = get_settings()
+logger = logging.getLogger(__name__)
 if settings.google_application_credentials:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
 
@@ -37,12 +42,24 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Gère le cycle de vie des ressources externes de l’application."""
     await init_api_access_schema()
     await hiboo_client.load_persisted_cache()
+    try:
+        await cleanup_expired_route_maps()
+    except Exception:
+        logger.exception("La purge initiale des images expirées a échoué.")
+    map_cleanup_task = asyncio.create_task(route_map_cleanup_loop())
     if settings.hiboo_api_name and settings.hiboo_api_key:
         hiboo_client.start_background_refresh()
-    yield
-    await close_routing_client()
-    await close_hiboo_client()
-    await dispose_engine()
+    try:
+        yield
+    finally:
+        map_cleanup_task.cancel()
+        try:
+            await map_cleanup_task
+        except asyncio.CancelledError:
+            pass
+        await close_routing_client()
+        await close_hiboo_client()
+        await dispose_engine()
 
 
 app = FastAPI(
@@ -99,6 +116,7 @@ async def unexpected_exception_handler(_: Request, __: Exception) -> JSONRespons
 
 app.include_router(health_router, prefix=settings.api_v1_prefix)
 app.include_router(eta_router, prefix=settings.api_v1_prefix)
+app.include_router(maps_router, prefix=settings.api_v1_prefix)
 app.include_router(config_router, prefix=settings.api_v1_prefix)
 app.include_router(telematics_router, prefix=settings.api_v1_prefix)
 app.include_router(admin_router, prefix=settings.api_v1_prefix)
@@ -141,6 +159,16 @@ async def telematics_tester(request: Request) -> Response:
         request=request,
         name="pages/telematics.html",
         context={"page_section": "Test télématique"},
+    )
+
+
+@app.get("/parc-location", include_in_schema=False)
+async def parc_location_tester(request: Request) -> Response:
+    """Sert l’interface de test de l’adresse et du GPS d’un parc."""
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/parc_location.html",
+        context={"page_section": "Adresse et GPS d’un parc"},
     )
 
 

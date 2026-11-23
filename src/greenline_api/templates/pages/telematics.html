@@ -4,6 +4,7 @@
 {% block content %}
 <main>
     <section class="intro"><small>Flotte · Hiboo</small><h1>Tester la télématique</h1><p>Vérifiez les identifiants de parc et récupérez la position GPS la plus récente.</p></section>
+    <p class="hint"><a href="/parc-location">Ouvrir la page dédiée adresse + coordonnées d’un parc →</a></p>
     <section class="panel input-panel">
       <label for="parc-ids">Identifiant(s) de parc</label>
       <textarea id="parc-ids" placeholder="PF-1233&#10;ST-1233" spellcheck="false"></textarea>
@@ -12,6 +13,7 @@
       <div class="actions">
         <button id="check-button" type="button">Vérifier la télématique</button>
         <button id="positions-button" type="button">Récupérer les positions GPS</button>
+        <button id="location-button" type="button">Adresse et coordonnées d’un parc</button>
         <button id="clear-button" class="secondary" type="button">Effacer les résultats</button>
       </div>
     </section>
@@ -27,6 +29,12 @@
         <p id="positions-status" class="status" role="status">Saisissez un ou plusieurs identifiants.</p>
         <div id="positions-results" class="results"><div class="empty">Les résultats apparaîtront ici.</div></div>
         <div class="raw"><details><summary>Voir la réponse JSON</summary><pre id="positions-json">Aucune réponse reçue.</pre></details></div>
+      </section>
+      <section class="panel test-panel location-panel" aria-labelledby="location-title">
+        <div class="panel-head"><h2 id="location-title">Adresse du parc</h2><p>Adresse et coordonnées calculées depuis le dernier GPS Hiboo</p></div>
+        <p id="location-status" class="status" role="status">Saisissez un identifiant unique de parc.</p>
+        <div id="location-results" class="results"><div class="empty">Les résultats apparaîtront ici.</div></div>
+        <div class="raw"><details><summary>Voir la réponse JSON</summary><pre id="location-json">Aucune réponse reçue.</pre></details></div>
       </section>
     </div>
   </main>

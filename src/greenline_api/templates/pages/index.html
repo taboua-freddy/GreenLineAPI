@@ -14,7 +14,7 @@
         <div class="point"><label for="api-token">Token API GreenLine</label><input id="api-token" type="password" autocomplete="off" placeholder="gl_…"></div>
         <button id="calculate" class="primary" type="button">Calculer l’ETA</button>
         <p id="message" role="status"></p>
-        <div id="result" class="result"><div class="result-label">Heure d’arrivée estimée</div><div id="eta-time" class="eta-time">—</div><div class="result-meta"><span id="duration">—</span><span id="distance">—</span></div></div>
+        <div id="result" class="result"><div class="result-label">Heure d’arrivée estimée</div><div id="eta-time" class="eta-time">—</div><div class="result-meta"><span id="duration">—</span><span id="distance">—</span></div><a id="map-image-link" target="_blank" rel="noopener" hidden>Ouvrir la carte PNG</a><img id="map-image-preview" alt="Carte statique de l’itinéraire" hidden style="width:100%;margin-top:12px;border-radius:8px"></div>
       </section>
       <section class="panel map-panel"><div class="map-tip">Cliquez sur la carte pour placer le point sélectionné</div><div id="map"></div><div id="map-error" class="map-error"><div><strong>Carte Google non configurée</strong>Ajoutez une clé navigateur dans GOOGLE_MAPS_API_KEY et activez Maps JavaScript API.</div></div></section>
     </div>

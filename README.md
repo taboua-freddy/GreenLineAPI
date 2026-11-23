@@ -19,6 +19,7 @@ Prérequis : Python 3.12+. Docker Compose est requis seulement pour le démarrag
 6. Consulter la référence des endpoints : <http://localhost:8000/api-reference>
 7. Gérer les tokens API et leurs quotas : <http://localhost:8000/token-management>
 8. Tester adresses, parcs et itinéraires : <http://localhost:8000/route-tester>
+9. Tester l’adresse et le GPS d’un parc : <http://localhost:8000/parc-location>
 
 ## Format des réponses
 
@@ -63,6 +64,8 @@ Le calcul d’itinéraire utilise les identifiants Google côté serveur. Active
 
 Les nouvelles routes d’adresse et d’ETA hybride se testent sur `/route-tester`. Pour la conversion d’adresse, activez Geocoding API et renseignez `GOOGLE_GEOCODING_API_KEY` avec une clé serveur restreinte à cette API. Elle n’est jamais exposée au navigateur. Conservez `GOOGLE_MAPS_API_KEY` pour Maps JavaScript côté navigateur.
 
+Les deux routes ETA génèrent aussi une carte PNG de l’itinéraire via Google Maps Static API. Activez cette API et la facturation, puis renseignez `GOOGLE_STATIC_MAPS_API_KEY` avec une clé serveur restreinte à Static Maps API. La réponse inclut un `map.image_url` temporaire et, par défaut, `map.image_base64`. Le paramètre `?include_map_base64=false` omet le base64 tout en conservant le lien. Le lien expire au bout de 59 minutes et les images expirées sont purgées toutes les 30 secondes ainsi qu’au démarrage. Configurez `PUBLIC_API_BASE_URL` si l’API est derrière un proxy ou si le lien doit être consommé par un système de messagerie externe. Le base64 inclus dans une réponse est ensuite sous le contrôle du client qui l’a reçu et ne peut pas être supprimé à distance.
+
 - **Python local sous Windows :** le chemin configuré dans `.env` est transmis au client Google. Démarrez ensuite Uvicorn depuis la racine du projet.
 - **Docker Compose sous Windows :** exécutez `gcloud auth application-default login` sur l’hôte avant `docker compose up --build`. Compose monte en lecture seule `%APPDATA%\gcloud\application_default_credentials.json` dans le conteneur.
 
@@ -70,7 +73,7 @@ Ne confondez pas la clé navigateur `GOOGLE_MAPS_API_KEY` avec les identifiants 
 
 ## Calcul d’ETA
 
-`POST /api/v1/eta` reçoit les coordonnées GPS de départ et d’arrivée. Les détails de l’itinéraire (heure d’arrivée estimée en UTC, durée, distance et géométrie encodée) sont fournis dans `data` de l’enveloppe standard. Le calcul utilise le client Python `google-maps-routing`, en mode voiture et avec estimation tenant compte du trafic lorsque les données sont disponibles.
+`POST /api/v1/eta` reçoit les coordonnées GPS de départ et d’arrivée. Les détails de l’itinéraire (heure d’arrivée estimée en UTC, durée, distance et géométrie encodée) sont fournis dans `data` de l’enveloppe standard, avec l’image de carte encodée et son lien temporaire. Le calcul utilise le client Python `google-maps-routing`, en mode voiture et avec estimation tenant compte du trafic lorsque les données sont disponibles.
 
 Exemple de corps JSON :
 
@@ -106,6 +109,8 @@ Configurez `HIBOO_API_NAME` et `HIBOO_API_KEY` dans `.env` avec les identifiants
 
 Pour un seul véhicule, le corps peut aussi être `{ "parc_id": "PF-1233" }`.
 
+`POST /api/v1/telematics/location` accepte un seul `{ "parc_id": "PF-1233" }`. La route récupère son dernier GPS Hiboo puis effectue une géocodification inverse pour renvoyer l’adresse lisible avec les coordonnées GPS et la date du relevé. Elle requiert donc Hiboo et `GOOGLE_GEOCODING_API_KEY`; véhicule sans télématique, GPS absent ou adresse introuvable renvoie HTTP 404. Un bouton dédié est disponible dans l’interface `/telematics`.
+
 Une interface de test est disponible sur <http://localhost:8000/telematics>. Elle permet de lancer chaque appel, consulter les résultats et ouvrir les coordonnées sur Google Maps.
 
 La liste des équipements Hiboo est préchargée en tâche de fond, paginée par lots de 50, puis conservée 24 heures dans la mémoire et dans la base configurée. Elle est restaurée au redémarrage; si elle est encore valide, elle est réutilisée sans retélécharger la flotte. Chaque page téléchargée est aussi enregistrée comme point de reprise avec son offset confirmé. Après une coupure réseau ou un redémarrage pendant le téléchargement, la prochaine tentative repart de cet offset, sans recommencer les pages déjà reçues. Une fois la liste complète enregistrée, le point de reprise est supprimé. Les erreurs réseau et réponses HTTP temporaires (429, 5xx) sont retentées jusqu’à trois fois avec un délai croissant. Après le premier chargement, les routes télématiques continuent à utiliser le dernier instantané pendant son actualisation; un échec complet sera retenté après cinq minutes. Au tout premier démarrage sans instantané existant, seule la première requête télématique peut attendre la fin du chargement. Les autres routes de l’API restent disponibles. Les positions GPS sont récupérées auprès de Hiboo à chaque appel. Pour un véhicule sans télématique, `equipped` vaut `false` et `position` vaut `null`; un véhicule équipé sans position disponible garde `equipped: true` avec `position: null`.
@@ -135,6 +140,6 @@ Les nouveaux domaines métier (interventions, planning, équipes) pourront être
 
 ## Configuration
 
-Les paramètres sont lus depuis les variables d’environnement ou `.env` : `APP_NAME`, `APP_ENV`, `API_V1_PREFIX`, `DATABASE_URL`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_GEOCODING_API_KEY`, `HIBOO_API_BASE_URL`, `HIBOO_API_NAME`, `HIBOO_API_KEY`, `API_ADMIN_TOKEN` et `API_DAILY_LIMIT_DEFAULT`. Ne jamais committer de secrets réels.
+Les paramètres sont lus depuis les variables d’environnement ou `.env` : `APP_NAME`, `APP_ENV`, `API_V1_PREFIX`, `DATABASE_URL`, `PUBLIC_API_BASE_URL`, `GOOGLE_MAPS_API_KEY`, `GOOGLE_GEOCODING_API_KEY`, `GOOGLE_STATIC_MAPS_API_KEY`, `HIBOO_API_BASE_URL`, `HIBOO_API_NAME`, `HIBOO_API_KEY`, `API_ADMIN_TOKEN` et `API_DAILY_LIMIT_DEFAULT`. Ne jamais committer de secrets réels.
 
 Pour passer d’une base locale SQLite à PostgreSQL, modifiez `DATABASE_URL` (par exemple `postgresql+asyncpg://greenline:greenline@localhost:5432/greenline`) et démarrez l’application : les tables seront créées dans PostgreSQL. Cela ne copie pas les données SQLite existantes; il faudra transférer séparément les quotas, les statistiques et les hashes de tokens, ou recréer les tokens clients.

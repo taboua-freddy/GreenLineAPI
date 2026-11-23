@@ -11,7 +11,9 @@ class Settings(BaseSettings):
     database_url: str = "sqlite+aiosqlite:///./greenline.db"
     google_maps_api_key: str | None = None
     google_geocoding_api_key: str | None = None
+    google_static_maps_api_key: str | None = None
     google_application_credentials: str | None = None
+    public_api_base_url: str | None = None
     hiboo_api_base_url: str = "https://api.hiboo.io"
     hiboo_api_name: str | None = None
     hiboo_api_key: str | None = None

@@ -17,9 +17,11 @@
         <a href="#eta">Calcul d’ETA</a>
         <a href="#geocode">Géocodifier une adresse</a>
         <a href="#eta-locations">ETA adresse / parc</a>
+        <a href="#route-map">Image de carte</a>
         <a href="#config">Configuration publique</a>
         <a href="#check">Vérifier la télématique</a>
         <a href="#positions">Dernières positions</a>
+        <a href="#location">Adresse d’un parc</a>
         <a href="#admin">Gestion des accès</a>
         <a href="#format">Format commun</a>
       </aside>
@@ -58,7 +60,7 @@
         <article class="endpoint" id="eta-locations">
           <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/eta/locations</code><p>ETA entre adresses et/ou véhicules</p></div>
           <div class="endpoint-body">
-            <section><h3>Corps JSON requis</h3><p class="param-note">Pour origin et destination, fournissez exactement un champ : parc_id ou address.</p><div class="param"><code>origin.parc_id</code><span class="optional">Identifiant de parc</span></div><div class="param"><code>origin.address</code><span class="optional">Adresse</span></div><div class="param"><code>destination.parc_id / address</code><span class="required">Un seul requis</span></div><p class="note">Formats parc acceptés : PF-1233, ST-1233, CO-1233, ME-1233. Un parc doit être présent dans Hiboo et fournir une position GPS exploitable. Les adresses utilisent Google Geocoding.</p></section>
+            <section><h3>Paramètres</h3><p class="param-note">Le corps comprend origin et destination. Pour chacun, fournissez exactement parc_id ou address.</p><div class="param"><code>origin.parc_id / address</code><span class="required">Un seul</span></div><div class="param"><code>destination.parc_id / address</code><span class="required">Un seul</span></div><div class="param"><code>?include_map_base64</code><span class="optional">Booléen, true par défaut</span></div><p class="note">Formats parc acceptés : PF-1233, ST-1233, CO-1233, ME-1233. Un parc doit être présent dans Hiboo et fournir une position GPS exploitable. Les adresses utilisent Google Geocoding.</p></section>
             <section><h3>Exemple mixte</h3><pre>{
   "origin": { "parc_id": "PF-1233" },
   "destination": { "address": "10 rue de Rivoli, Paris" }
@@ -70,11 +72,17 @@
     "duration_seconds": 900,
     "distance_meters": 4200,
     "encoded_polyline": "...",
+    "map": {
+      "image_url": "https://api.example.com/api/v1/maps/…",
+      "content_type": "image/png",
+      "expires_at": "2026-11-19T15:30:00Z",
+      "image_base64": "iVBORw0KGgo…"
+    },
     "origin": { "source_type": "parc_id", "source": "PF-1233", "latitude": 48.85, "longitude": 2.35 },
     "destination": { "source_type": "address", "source": "10 Rue de Rivoli, Paris", "latitude": 48.85, "longitude": 2.36 }
   },
   "pagination": null
-}</pre><p class="note">Les quatre combinaisons parc/parc, parc/adresse, adresse/parc et adresse/adresse sont acceptées. Une télématique absente ou sans GPS renvoie 422. Les erreurs Google/Hiboo renvoient 502 ou 503.</p></section>
+}</pre><p class="note">Pour omettre uniquement le base64, appelez la route avec <code>?include_map_base64=false</code>; le lien PNG reste fourni. Le lien expire après une heure au maximum. Une télématique absente ou sans GPS renvoie 422.</p></section>
           </div>
         </article>
 
@@ -92,10 +100,25 @@
     "eta_at": "2026-11-19T14:30:00Z",
     "duration_seconds": 900,
     "distance_meters": 4200,
-    "encoded_polyline": "..."
+    "encoded_polyline": "...",
+    "map": {
+      "image_url": "https://api.example.com/api/v1/maps/…",
+      "content_type": "image/png",
+      "expires_at": "2026-11-19T15:30:00Z",
+      "image_base64": "iVBORw0KGgo…"
+    }
   },
   "pagination": null
-}</pre><p class="note">Erreurs possibles : 401 token manquant ou invalide, 404 aucun itinéraire, 422 paramètres invalides, 429 quota atteint, 502 erreur du service Google, 503 identifiants Google absents.</p></section>
+}</pre><p class="note">Paramètre de requête <code>include_map_base64</code> (true par défaut) : passez false pour retirer le champ base64 et conserver le lien. L’image PNG du lien expire en une heure au maximum. Erreurs possibles : 401, 404, 422, 429, 502, 503.</p></section>
+          </div>
+        </article>
+
+        <article class="endpoint" id="route-map">
+          <div class="endpoint-head"><span class="method">GET</span><code class="path">/api/v1/maps/{image_id}</code><p>Télécharger une carte PNG temporaire</p></div>
+          <div class="endpoint-body">
+            <section><h3>Paramètres de chemin</h3><div class="param"><code>image_id</code><span class="required">Identifiant reçu dans map.image_url</span></div><p class="note">Pas de token GreenLine requis : l’identifiant aléatoire du lien sert de clé d’accès. Le lien est valable au plus une heure.</p></section>
+            <section><h3>Réponse</h3><div class="response-label"><span class="http">200</span> Image PNG</div><pre>Content-Type: image/png
+Cache-Control: no-store</pre><p class="note">HTTP 404 si l’identifiant est inconnu, HTTP 410 si le lien a expiré. Les images expirées sont purgées périodiquement et au démarrage.</p></section>
           </div>
         </article>
 
@@ -152,6 +175,26 @@
           </div>
         </article>
 
+        <article class="endpoint" id="location">
+          <div class="endpoint-head"><span class="method">POST</span><code class="path">/api/v1/telematics/location</code><p>Adresse et coordonnées du dernier GPS d’un parc</p></div>
+          <div class="endpoint-body">
+            <section><h3>Corps JSON requis</h3><div class="param"><code>parc_id</code><span class="required">Un seul identifiant</span></div><p class="note">Formats acceptés : PF-1233, ST-1233, CO-1233 et ME-1233. Le véhicule doit être équipé et avoir une position GPS dans Hiboo.</p></section>
+            <section><h3>Exemple</h3><pre>{ "parc_id": "PF-1233" }</pre><div class="response-label"><span class="http">200</span> Succès</div><pre>{
+  "message": "Adresse et coordonnées du véhicule récupérées.",
+  "errors": [],
+  "data": {
+    "parc_id": "PF-1233",
+    "equipped": true,
+    "address": "10 Rue de Rivoli, 75001 Paris, France",
+    "latitude": 48.8556,
+    "longitude": 2.3653,
+    "position_date": "2026-11-23T10:15:00Z"
+  },
+  "pagination": null
+}</pre><p class="note">Erreurs possibles : 401 token invalide, 404 véhicule non équipé / sans GPS / adresse introuvable, 422 parc_id invalide, 429 quota atteint, 502 Hiboo ou Google indisponible, 503 identifiants absents.</p></section>
+          </div>
+        </article>
+
         <article class="endpoint" id="admin">
           <div class="endpoint-head"><span class="method">ADMIN</span><code class="path">/api/v1/admin/*</code><p>Gestion protégée par X-Admin-Token</p></div>
           <div class="endpoint-body">
@@ -191,7 +234,7 @@
     </div>
     <section class="web-pages">
       <h2>Pages de l’application</h2>
-      <p><a href="/">/</a> — outil ETA · <a href="/route-tester">/route-tester</a> — adresses, parcs et simulation dynamique · <a href="/live">/live</a> — simulation GPS · <a href="/telematics">/telematics</a> — test Hiboo · <a href="/token-management">/token-management</a> — administration des accès.</p>
+      <p><a href="/">/</a> — outil ETA · <a href="/route-tester">/route-tester</a> — adresses, parcs et simulation dynamique · <a href="/parc-location">/parc-location</a> — test adresse + GPS d’un parc · <a href="/live">/live</a> — simulation GPS · <a href="/telematics">/telematics</a> — test Hiboo · <a href="/token-management">/token-management</a> — administration des accès.</p>
     </section>
   </main>
 {% endblock %}

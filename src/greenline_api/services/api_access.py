@@ -19,6 +19,7 @@ API_QUOTA_ENDPOINTS = (
     ("POST", "/api/v1/eta/locations"),
     ("POST", "/api/v1/geocode"),
     ("POST", "/api/v1/telematics/check"),
+    ("POST", "/api/v1/telematics/location"),
     ("POST", "/api/v1/telematics/positions"),
 )
 client_token_header = APIKeyHeader(name="X-API-Token", auto_error=False)

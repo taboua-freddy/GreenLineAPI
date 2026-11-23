@@ -66,7 +66,7 @@ const points = {
     const button = document.getElementById("calculate");
     message.classList.remove("error"); message.textContent = "Calcul de l’itinéraire…"; resultBox.classList.remove("show"); button.disabled = true;
     try {
-      const response = await fetch("/api/v1/eta", {method:"POST", headers:{"Content-Type":"application/json","X-API-Token":apiTokenInput.value.trim()}, body:JSON.stringify({origin:{latitude:points.origin.lat,longitude:points.origin.lng},destination:{latitude:points.destination.lat,longitude:points.destination.lng}})});
+      const response = await fetch("/api/v1/eta?include_map_base64=false", {method:"POST", headers:{"Content-Type":"application/json","X-API-Token":apiTokenInput.value.trim()}, body:JSON.stringify({origin:{latitude:points.origin.lat,longitude:points.origin.lng},destination:{latitude:points.destination.lat,longitude:points.destination.lng}})});
       const envelope = await response.json();
       if (!response.ok) throw new Error(envelope.message || "Le calcul de l’ETA a échoué.");
       const data = envelope.data;
@@ -74,6 +74,10 @@ const points = {
       const minutes = Math.round(data.duration_seconds / 60);
       document.getElementById("duration").textContent = minutes < 60 ? `${minutes} min` : `${Math.floor(minutes/60)} h ${minutes%60} min`;
       document.getElementById("distance").textContent = `${(data.distance_meters/1000).toFixed(1).replace(".",",")} km`;
+      const mapImage = document.getElementById("map-image-preview");
+      const mapLink = document.getElementById("map-image-link");
+      mapImage.src = data.map.image_url; mapImage.hidden = false;
+      mapLink.href = data.map.image_url; mapLink.hidden = false;
       resultBox.classList.add("show"); message.textContent = "Itinéraire calculé.";
       if (window.drawRoute && data.encoded_polyline) window.drawRoute(data.encoded_polyline);
     } catch (error) { message.textContent = error.message; message.classList.add("error"); }

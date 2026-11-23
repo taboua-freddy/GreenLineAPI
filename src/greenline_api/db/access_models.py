@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Any
 
-from sqlalchemy import Date, DateTime, ForeignKey, Integer, JSON, String
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, JSON, LargeBinary, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from greenline_api.db.base import Base
@@ -53,3 +53,12 @@ class HibooEquipmentRefreshRecord(Base):
     next_offset: Mapped[int] = mapped_column(Integer, nullable=False)
     total: Mapped[int] = mapped_column(Integer, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class RouteMapImageRecord(Base):
+    __tablename__ = "route_map_images"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    image: Mapped[bytes] = mapped_column(LargeBinary, nullable=False)
+    content_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)

@@ -18,7 +18,7 @@
         <div class="place"><div class="place-head">Arrivée</div><div class="row"><div><label for="destination-type">Type</label><select id="destination-type"><option value="parc_id">Parc ID</option><option value="address">Adresse</option></select></div><div><label for="destination-value">Adresse ou parc_id</label><input id="destination-value" value="PF-1233"></div></div></div>
         <div class="token"><label for="api-token">Token API GreenLine</label><input id="api-token" type="password" autocomplete="off" placeholder="gl_…"></div>
         <button class="button primary" id="calculate" type="button">Calculer l’ETA</button><p id="eta-status" class="status" role="status"></p>
-        <div id="eta-result" class="result"><strong id="eta-time"></strong><div class="meta"><span id="eta-duration"></span><span id="eta-distance"></span></div><div id="resolved" class="hint" style="margin:10px 0 0"></div>
+        <div id="eta-result" class="result"><strong id="eta-time"></strong><div class="meta"><span id="eta-duration"></span><span id="eta-distance"></span></div><div id="resolved" class="hint" style="margin:10px 0 0"></div><a id="static-map-link" target="_blank" rel="noopener">Ouvrir la carte PNG</a><img id="static-map-preview" alt="Carte statique du trajet" style="display:block;width:100%;margin-top:10px;border-radius:8px">
           <div class="dynamic"><button class="button" id="simulate" type="button">Démarrer le test dynamique</button><div class="progress"><span id="progress-bar"></span></div><small id="dynamic-status">La simulation anime le véhicule sur la route calculée.</small></div>
         </div>
       </section>

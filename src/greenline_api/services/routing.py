@@ -71,6 +71,38 @@ async def geocode_address(address: str) -> dict[str, Any]:
     }
 
 
+async def reverse_geocode_coordinates(latitude: float, longitude: float) -> str:
+    """Convertit des coordonnées GPS en adresse lisible avec Google Geocoding."""
+    api_key = get_settings().google_geocoding_api_key
+    if not api_key:
+        raise GeocodingConfigurationError("La clé Google Geocoding n’est pas configurée.")
+
+    try:
+        async with httpx.AsyncClient(timeout=httpx.Timeout(15.0)) as client:
+            response = await client.get(
+                "https://maps.googleapis.com/maps/api/geocode/json",
+                params={"latlng": f"{latitude},{longitude}", "key": api_key},
+            )
+            response.raise_for_status()
+            payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise GeocodingError("Le service Google Geocoding est indisponible.") from exc
+
+    if not isinstance(payload, dict):
+        raise GeocodingError("La réponse Google Geocoding est invalide.")
+    status = payload.get("status")
+    if status == "ZERO_RESULTS":
+        raise GeocodingNotFoundError("Aucune adresse trouvée pour ces coordonnées.")
+    if status != "OK":
+        raise GeocodingError("Google Geocoding a refusé la requête.")
+    results = payload.get("results")
+    first = results[0] if isinstance(results, list) and results else None
+    address = first.get("formatted_address") if isinstance(first, dict) else None
+    if not isinstance(address, str) or not address:
+        raise GeocodingError("Google Geocoding n’a pas renvoyé d’adresse exploitable.")
+    return address
+
+
 @lru_cache(maxsize=1)
 def _get_client() -> routing_v2.RoutesAsyncClient:
     """Crée une seule instance du client asynchrone Google Routes pour le processus."""

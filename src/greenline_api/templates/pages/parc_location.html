@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}GreenLine — Adresse d’un parc{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/parc_location.css">{% endblock %}
+{% block content %}
+<main class="location-page">
+  <section class="intro">
+    <small>Test API · Hiboo & Google Geocoding</small>
+    <h1>Adresse et coordonnées d’un parc</h1>
+    <p>La page récupère la dernière position GPS Hiboo du véhicule puis la convertit en adresse lisible.</p>
+  </section>
+  <section class="panel form-panel">
+    <label for="parc-id">Identifiant du parc</label>
+    <input id="parc-id" autocomplete="off" spellcheck="false" placeholder="PF-1233" value="PF-1233">
+    <p class="hint">Un seul parc par requête. Préfixes acceptés : PF, ST, CO et ME.</p>
+    <label for="api-token">Token API GreenLine</label>
+    <input id="api-token" type="password" autocomplete="off" placeholder="gl_…">
+    <div class="actions"><button id="lookup" class="primary" type="button">Récupérer l’adresse et le GPS</button></div>
+    <p id="status" class="status" role="status">Saisissez un parc et lancez la recherche.</p>
+  </section>
+  <section id="result" class="panel result" hidden>
+    <div class="result-heading"><div><small>Résultat</small><h2 id="result-parc">—</h2></div><span id="badge" class="badge">—</span></div>
+    <p id="address" class="address">—</p>
+    <div class="coordinates"><div><small>Latitude</small><strong id="latitude">—</strong></div><div><small>Longitude</small><strong id="longitude">—</strong></div></div>
+    <p id="position-date" class="hint"></p>
+    <a id="map-link" class="map-link" target="_blank" rel="noopener noreferrer">Ouvrir la position dans Google Maps ↗</a>
+  </section>
+  <section class="panel raw-panel">
+    <details><summary>Voir la réponse JSON complète</summary><pre id="json-response">Aucune réponse reçue.</pre></details>
+  </section>
+</main>
+{% endblock %}
+{% block page_scripts %}<script defer src="/static/js/parc_location.js"></script>{% endblock %}
