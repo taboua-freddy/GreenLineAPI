@@ -6,7 +6,13 @@ from typing import Any
 import httpx
 
 from greenline_api.core.config import get_settings
-from greenline_api.db.session import load_hiboo_equipment_cache, save_hiboo_equipment_cache
+from greenline_api.db.session import (
+    clear_hiboo_equipment_refresh,
+    load_hiboo_equipment_cache,
+    load_hiboo_equipment_refresh,
+    save_hiboo_equipment_cache,
+    save_hiboo_equipment_refresh,
+)
 
 EQUIPMENT_CACHE_TTL = timedelta(days=1)
 EQUIPMENT_REFRESH_RETRY_DELAY = timedelta(minutes=5)
@@ -157,8 +163,39 @@ class HibooClient:
             equipment_by_name: dict[str, dict[str, Any]] = {}
             offset = 0
             total: int | None = None
+            try:
+                checkpoint = await load_hiboo_equipment_refresh()
+            except Exception:
+                logger.exception("Impossible de charger le point de reprise du téléchargement Hiboo.")
+                checkpoint = None
+
+            if checkpoint is not None:
+                saved_equipments, saved_offset, saved_total, updated_at = checkpoint
+                if updated_at.tzinfo is None:
+                    updated_at = updated_at.replace(tzinfo=UTC)
+                is_expired_completion = (
+                    saved_total == saved_offset
+                    and datetime.now(UTC) - updated_at >= EQUIPMENT_CACHE_TTL
+                )
+                if (
+                    0 <= saved_offset <= saved_total
+                    and not is_expired_completion
+                ):
+                    equipment_by_name = saved_equipments
+                    offset = saved_offset
+                    total = saved_total
+                    logger.info(
+                        "Reprise du téléchargement Hiboo à l’offset %s sur %s.",
+                        offset,
+                        total,
+                    )
+                else:
+                    try:
+                        await clear_hiboo_equipment_refresh()
+                    except Exception:
+                        logger.exception("Impossible de réinitialiser un point de reprise Hiboo expiré.")
+
             while total is None or offset < total:
-                print(f"Fetching Hiboo equipments, offset={offset}, total={total}")
                 payload = await self._request(
                     "GET",
                     "/v2/fleet/equipments",
@@ -171,13 +208,42 @@ class HibooClient:
                 reported_total = data.get("total")
                 if not isinstance(reported_total, int) or reported_total < 0:
                     raise HibooAPIError("Le total des équipements Hiboo est invalide.")
+                if total is not None and reported_total != total:
+                    logger.info(
+                        "Le total Hiboo a changé pendant le téléchargement (%s vers %s); reprise depuis le début.",
+                        total,
+                        reported_total,
+                    )
+                    equipment_by_name = {}
+                    offset = 0
+                    total = None
+                    try:
+                        await clear_hiboo_equipment_refresh()
+                    except Exception:
+                        logger.exception("Impossible de réinitialiser le point de reprise Hiboo.")
+                    continue
                 total = reported_total
+                if not rows and offset < total:
+                    raise HibooAPIError(
+                        "Hiboo a renvoyé une page vide avant la fin de la liste des équipements."
+                    )
                 for item in rows:
                     if isinstance(item, dict) and isinstance(item.get("name"), str):
                         equipment_by_name[item["name"].strip().upper()] = item
                 if not rows:
                     break
-                offset += len(rows)
+                next_offset = offset + len(rows)
+                try:
+                    await save_hiboo_equipment_refresh(
+                        equipment_by_name,
+                        next_offset,
+                        total,
+                        datetime.now(UTC),
+                    )
+                except Exception as exc:
+                    logger.exception("Impossible de sauvegarder le point de reprise du téléchargement Hiboo.")
+                    raise HibooAPIError("Le point de reprise Hiboo n’a pas pu être sauvegardé.") from exc
+                offset = next_offset
 
             # Swap the completed snapshot atomically so readers never see a partial list.
             self._equipment_cache = equipment_by_name
@@ -185,8 +251,9 @@ class HibooClient:
             self._equipment_expires_at = cached_at + EQUIPMENT_CACHE_TTL
             try:
                 await save_hiboo_equipment_cache(equipment_by_name, cached_at)
+                await clear_hiboo_equipment_refresh()
             except Exception:
-                logger.exception("Impossible d’enregistrer l’instantané de la flotte Hiboo en base.")
+                logger.exception("Impossible de finaliser l’instantané de la flotte Hiboo en base.")
             return equipment_by_name
 
     def _schedule_equipment_refresh(self) -> None:

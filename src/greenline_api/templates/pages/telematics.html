@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}GreenLine — Test télématique{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/telematics.css">{% endblock %}
+{% block content %}
+<main>
+    <section class="intro"><small>Flotte · Hiboo</small><h1>Tester la télématique</h1><p>Vérifiez les identifiants de parc et récupérez la position GPS la plus récente.</p></section>
+    <section class="panel input-panel">
+      <label for="parc-ids">Identifiant(s) de parc</label>
+      <textarea id="parc-ids" placeholder="PF-1233&#10;ST-1233" spellcheck="false"></textarea>
+      <p class="hint">Un identifiant par ligne, ou séparez-les par une virgule ou un point-virgule. Préfixes acceptés : PF, ST, CO et ME.</p>
+      <div class="api-token"><label for="api-token">Token API GreenLine</label><input id="api-token" type="password" autocomplete="off" placeholder="gl_…"><p class="hint">Créez un token dans la page de gestion des accès.</p></div>
+      <div class="actions">
+        <button id="check-button" type="button">Vérifier la télématique</button>
+        <button id="positions-button" type="button">Récupérer les positions GPS</button>
+        <button id="clear-button" class="secondary" type="button">Effacer les résultats</button>
+      </div>
+    </section>
+    <div class="grid">
+      <section class="panel test-panel" aria-labelledby="check-title">
+        <div class="panel-head"><h2 id="check-title">Équipement télématique</h2><p>Présence dans la flotte d’équipements Hiboo</p></div>
+        <p id="check-status" class="status" role="status">Saisissez un ou plusieurs identifiants.</p>
+        <div id="check-results" class="results"><div class="empty">Les résultats apparaîtront ici.</div></div>
+        <div class="raw"><details><summary>Voir la réponse JSON</summary><pre id="check-json">Aucune réponse reçue.</pre></details></div>
+      </section>
+      <section class="panel test-panel" aria-labelledby="positions-title">
+        <div class="panel-head"><h2 id="positions-title">Dernières positions GPS</h2><p>Latitude, longitude et heure du dernier relevé</p></div>
+        <p id="positions-status" class="status" role="status">Saisissez un ou plusieurs identifiants.</p>
+        <div id="positions-results" class="results"><div class="empty">Les résultats apparaîtront ici.</div></div>
+        <div class="raw"><details><summary>Voir la réponse JSON</summary><pre id="positions-json">Aucune réponse reçue.</pre></details></div>
+      </section>
+    </div>
+  </main>
+{% endblock %}
+{% block page_scripts %}<script defer src="/static/js/telematics.js"></script>{% endblock %}

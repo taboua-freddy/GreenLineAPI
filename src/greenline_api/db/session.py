@@ -70,3 +70,61 @@ async def save_hiboo_equipment_cache(
         )
         await session.execute(statement)
         await session.commit()
+
+
+async def load_hiboo_equipment_refresh() -> tuple[dict[str, dict[str, Any]], int, int, datetime] | None:
+    from greenline_api.db.access_models import HibooEquipmentRefreshRecord
+
+    async with _session_factory() as session:
+        record = await session.get(HibooEquipmentRefreshRecord, 1)
+        if record is None:
+            return None
+        return record.equipments, record.next_offset, record.total, record.updated_at
+
+
+async def save_hiboo_equipment_refresh(
+    equipments: dict[str, dict[str, Any]],
+    next_offset: int,
+    total: int,
+    updated_at: datetime,
+) -> None:
+    from greenline_api.db.access_models import HibooEquipmentRefreshRecord
+
+    async with _session_factory() as session:
+        dialect = session.get_bind().dialect.name
+        if dialect == "postgresql":
+            insert = pg_insert
+        elif dialect == "sqlite":
+            insert = sqlite_insert
+        else:
+            raise RuntimeError(f"Dialecte de base non pris en charge pour le checkpoint Hiboo : {dialect}.")
+
+        statement = insert(HibooEquipmentRefreshRecord).values(
+            id=1,
+            equipments=equipments,
+            next_offset=next_offset,
+            total=total,
+            updated_at=updated_at,
+        )
+        statement = statement.on_conflict_do_update(
+            index_elements=[HibooEquipmentRefreshRecord.id],
+            set_={
+                "equipments": statement.excluded.equipments,
+                "next_offset": statement.excluded.next_offset,
+                "total": statement.excluded.total,
+                "updated_at": statement.excluded.updated_at,
+            },
+        )
+        await session.execute(statement)
+        await session.commit()
+
+
+async def clear_hiboo_equipment_refresh() -> None:
+    from greenline_api.db.access_models import HibooEquipmentRefreshRecord
+    from sqlalchemy import delete
+
+    async with _session_factory() as session:
+        await session.execute(
+            delete(HibooEquipmentRefreshRecord).where(HibooEquipmentRefreshRecord.id == 1)
+        )
+        await session.commit()

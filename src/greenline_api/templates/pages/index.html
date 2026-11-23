@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}GreenLine — Test ETA{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/index.css">{% endblock %}
+{% block content %}
+<main>
+    <section class="intro"><small>Interventions · Routage</small><h1>Calculer une ETA</h1><p>Choisissez deux points sur la carte ou saisissez leurs coordonnées GPS.</p></section>
+    <div class="layout">
+      <section class="panel controls">
+        <h2 class="section-title">Points de l’itinéraire</h2>
+        <p class="hint">Sélectionnez le point à placer, puis cliquez sur la carte.</p>
+        <div class="selector"><button class="select-btn active" data-point="origin" type="button">● Départ</button><button class="select-btn" data-point="destination" type="button">● Arrivée</button></div>
+        <div class="point"><div class="point-head"><i class="dot"></i>Départ</div><div class="coords"><div><label for="origin-lat">Latitude</label><input id="origin-lat" type="number" step="any" value="48.8566"></div><div><label for="origin-lng">Longitude</label><input id="origin-lng" type="number" step="any" value="2.3522"></div></div></div>
+        <div class="point"><div class="point-head"><i class="dot end"></i>Arrivée</div><div class="coords"><div><label for="destination-lat">Latitude</label><input id="destination-lat" type="number" step="any" value="48.8584"></div><div><label for="destination-lng">Longitude</label><input id="destination-lng" type="number" step="any" value="2.2945"></div></div></div>
+        <div class="point"><label for="api-token">Token API GreenLine</label><input id="api-token" type="password" autocomplete="off" placeholder="gl_…"></div>
+        <button id="calculate" class="primary" type="button">Calculer l’ETA</button>
+        <p id="message" role="status"></p>
+        <div id="result" class="result"><div class="result-label">Heure d’arrivée estimée</div><div id="eta-time" class="eta-time">—</div><div class="result-meta"><span id="duration">—</span><span id="distance">—</span></div></div>
+      </section>
+      <section class="panel map-panel"><div class="map-tip">Cliquez sur la carte pour placer le point sélectionné</div><div id="map"></div><div id="map-error" class="map-error"><div><strong>Carte Google non configurée</strong>Ajoutez une clé navigateur dans GOOGLE_MAPS_API_KEY et activez Maps JavaScript API.</div></div></section>
+    </div>
+  </main>
+{% endblock %}
+{% block page_scripts %}<script defer src="/static/js/index.js"></script>{% endblock %}

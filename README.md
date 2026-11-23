@@ -108,7 +108,7 @@ Pour un seul véhicule, le corps peut aussi être `{ "parc_id": "PF-1233" }`.
 
 Une interface de test est disponible sur <http://localhost:8000/telematics>. Elle permet de lancer chaque appel, consulter les résultats et ouvrir les coordonnées sur Google Maps.
 
-La liste des équipements Hiboo est préchargée en tâche de fond, paginée par lots de 50, puis conservée 24 heures dans la mémoire et dans la base configurée. Elle est restaurée au redémarrage; si elle est encore valide, elle est réutilisée sans retélécharger la flotte. Les erreurs réseau et réponses HTTP temporaires (429, 5xx) sont retentées jusqu’à trois fois avec un délai croissant. Après le premier chargement, les routes télématiques continuent à utiliser le dernier instantané pendant son actualisation; un échec complet sera retenté après cinq minutes. Au tout premier démarrage sans instantané existant, seule la première requête télématique peut attendre la fin du chargement. Les autres routes de l’API restent disponibles. Les positions GPS sont récupérées auprès de Hiboo à chaque appel. Pour un véhicule sans télématique, `equipped` vaut `false` et `position` vaut `null`; un véhicule équipé sans position disponible garde `equipped: true` avec `position: null`.
+La liste des équipements Hiboo est préchargée en tâche de fond, paginée par lots de 50, puis conservée 24 heures dans la mémoire et dans la base configurée. Elle est restaurée au redémarrage; si elle est encore valide, elle est réutilisée sans retélécharger la flotte. Chaque page téléchargée est aussi enregistrée comme point de reprise avec son offset confirmé. Après une coupure réseau ou un redémarrage pendant le téléchargement, la prochaine tentative repart de cet offset, sans recommencer les pages déjà reçues. Une fois la liste complète enregistrée, le point de reprise est supprimé. Les erreurs réseau et réponses HTTP temporaires (429, 5xx) sont retentées jusqu’à trois fois avec un délai croissant. Après le premier chargement, les routes télématiques continuent à utiliser le dernier instantané pendant son actualisation; un échec complet sera retenté après cinq minutes. Au tout premier démarrage sans instantané existant, seule la première requête télématique peut attendre la fin du chargement. Les autres routes de l’API restent disponibles. Les positions GPS sont récupérées auprès de Hiboo à chaque appel. Pour un véhicule sans télématique, `equipped` vaut `false` et `position` vaut `null`; un véhicule équipé sans position disponible garde `equipped: true` avec `position: null`.
 
 ## Accès API, tokens et quotas
 
@@ -126,7 +126,9 @@ Le diagramme des composants et des flux est disponible dans [ARCHITECTURE.md](AR
 - `src/greenline_api/core/` : configuration et préoccupations transverses
 - `src/greenline_api/db/` : moteur et sessions SQLAlchemy asynchrones
 - `src/greenline_api/services/` : logique métier et intégrations externes
-- `src/greenline_api/static/` : interface de test
+- `src/greenline_api/templates/base.html` et `templates/components/` : structure et composants HTML partagés
+- `src/greenline_api/templates/pages/` : une page par interface
+- `src/greenline_api/static/css/` et `static/js/` : styles et scripts découplés par page
 - `src/greenline_api/main.py` : assemblage de l’application
 
 Les nouveaux domaines métier (interventions, planning, équipes) pourront être ajoutés sous `src/greenline_api/` sans concentrer la logique dans les routes.

@@ -5,8 +5,11 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.responses import Response
 
 from greenline_api.api.v1.admin import router as admin_router
 from greenline_api.api.v1.config import router as config_router
@@ -24,12 +27,9 @@ settings = get_settings()
 if settings.google_application_credentials:
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = settings.google_application_credentials
 
-UI_PATH = Path(__file__).parent / "static" / "index.html"
-LIVE_UI_PATH = Path(__file__).parent / "static" / "live.html"
-TELEMATICS_UI_PATH = Path(__file__).parent / "static" / "telematics.html"
-API_REFERENCE_PATH = Path(__file__).parent / "static" / "api_reference.html"
-TOKEN_MANAGEMENT_PATH = Path(__file__).parent / "static" / "token_management.html"
-ROUTE_TESTER_PATH = Path(__file__).parent / "static" / "route_tester.html"
+STATIC_PATH = Path(__file__).parent / "static"
+TEMPLATE_PATH = Path(__file__).parent / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATE_PATH))
 
 
 @asynccontextmanager
@@ -51,6 +51,7 @@ app = FastAPI(
     description="API de gestion de l’ETA des interventions.",
     lifespan=lifespan,
 )
+app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -104,36 +105,60 @@ app.include_router(admin_router, prefix=settings.api_v1_prefix)
 
 
 @app.get("/", include_in_schema=False)
-async def eta_tester() -> FileResponse:
-    """Sert la page HTML qui permet de tester la carte et le calcul d’ETA."""
-    return FileResponse(UI_PATH)
+async def eta_tester(request: Request) -> Response:
+    """Sert la page qui permet de tester la carte et le calcul d’ETA."""
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/index.html",
+        context={"page_section": "Outil de test ETA"},
+    )
 
 
 @app.get("/live", include_in_schema=False)
-async def live_eta_tester() -> FileResponse:
+async def live_eta_tester(request: Request) -> Response:
     """Sert la page de simulation dynamique d’un trajet."""
-    return FileResponse(LIVE_UI_PATH)
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/live.html",
+        context={"page_section": "Simulation de trajet"},
+    )
 
 
 @app.get("/route-tester", include_in_schema=False)
-async def route_tester() -> FileResponse:
+async def route_tester(request: Request) -> Response:
     """Sert l’interface de géocodification et de test ETA dynamique."""
-    return FileResponse(ROUTE_TESTER_PATH)
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/route_tester.html",
+        context={"page_section": "Adresses · véhicules · ETA"},
+    )
 
 
 @app.get("/telematics", include_in_schema=False)
-async def telematics_tester() -> FileResponse:
+async def telematics_tester(request: Request) -> Response:
     """Sert la page de test de la télématique Hiboo."""
-    return FileResponse(TELEMATICS_UI_PATH)
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/telematics.html",
+        context={"page_section": "Test télématique"},
+    )
 
 
 @app.get("/api-reference", include_in_schema=False)
-async def api_reference() -> FileResponse:
+async def api_reference(request: Request) -> Response:
     """Sert la référence lisible des endpoints de l’API."""
-    return FileResponse(API_REFERENCE_PATH)
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/api_reference.html",
+        context={"page_section": "Référence API"},
+    )
 
 
 @app.get("/token-management", include_in_schema=False)
-async def token_management() -> FileResponse:
+async def token_management(request: Request) -> Response:
     """Sert l’interface d’administration des tokens et quotas API."""
-    return FileResponse(TOKEN_MANAGEMENT_PATH)
+    return templates.TemplateResponse(
+        request=request,
+        name="pages/token_management.html",
+        context={"page_section": "Gestion des accès API"},
+    )

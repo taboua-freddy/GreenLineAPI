@@ -1,66 +1,8 @@
-<!doctype html>
-<html lang="fr">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GreenLine — Référence API</title>
-  <style>
-    :root { color-scheme:light; --green:#147d55; --ink:#18251f; --muted:#66746d; --line:#e0e8e3; --soft:#f4f8f5; --code:#17231d; }
-    * { box-sizing:border-box; }
-    html { scroll-behavior:smooth; }
-    body { margin:0; color:var(--ink); background:#f5f7f5; font:15px/1.55 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif; }
-    header { min-height:66px; display:flex; align-items:center; gap:12px; padding:12px max(24px,calc((100vw - 1240px)/2)); background:#fff; border-bottom:1px solid var(--line); }
-    .brand { width:34px; height:34px; display:grid; place-items:center; border-radius:10px; color:#fff; background:var(--green); font-weight:800; }
-    header strong { font-size:17px; } header span { color:var(--muted); font-size:13px; }
-    .nav { display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
-    .nav a { padding:8px 11px; border:1px solid var(--line); border-radius:8px; color:var(--green); text-decoration:none; font-size:12px; font-weight:700; }
-    main { max-width:1240px; margin:0 auto; padding:38px 24px 64px; }
-    .intro { margin-bottom:23px; } .intro small { color:var(--green); font-weight:750; letter-spacing:.09em; text-transform:uppercase; }
-    h1 { margin:5px 0; font-size:32px; letter-spacing:-.035em; } .intro p { margin:0; max-width:780px; color:var(--muted); }
-    .quick-links { display:flex; gap:9px; flex-wrap:wrap; margin-top:15px; }
-    .quick-links a { padding:9px 12px; border-radius:8px; color:var(--green); background:#e9f5ee; text-decoration:none; font-size:13px; font-weight:750; }
-    .layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:22px; align-items:start; }
-    aside { position:sticky; top:18px; padding:16px; border:1px solid var(--line); border-radius:13px; background:#fff; }
-    aside strong { display:block; margin:0 0 8px; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
-    aside a { display:block; padding:7px 8px; border-radius:7px; color:#34463c; text-decoration:none; font-size:13px; }
-    aside a:hover { background:var(--soft); color:var(--green); }
-    .section-title { margin:26px 0 12px; font-size:19px; letter-spacing:-.02em; }
-    .endpoint { overflow:hidden; margin:0 0 15px; border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:0 3px 14px #18382908; scroll-margin-top:18px; }
-    .endpoint-head { display:flex; align-items:center; gap:10px; padding:15px 18px; border-bottom:1px solid var(--line); }
-    .method { min-width:58px; padding:4px 7px; border-radius:6px; color:#0c6644; background:#e6f4eb; text-align:center; font:800 11px ui-monospace,SFMono-Regular,Consolas,monospace; }
-    .path { font:700 14px ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; }
-    .endpoint-head p { margin:0 0 0 auto; color:var(--muted); font-size:12px; text-align:right; }
-    .endpoint-body { display:grid; grid-template-columns:minmax(190px,.72fr) minmax(0,1.28fr); gap:18px; padding:17px 18px 19px; }
-    h3 { margin:0 0 8px; font-size:13px; }
-    .param-note { margin:0 0 10px; color:var(--muted); font-size:12px; }
-    .param { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid #edf1ee; font-size:12px; }
-    .param:last-child { border-bottom:0; }
-    .param code { color:#264d3b; font-weight:700; }
-    .required { color:#ad493a; font-size:10px; font-weight:750; text-transform:uppercase; }
-    .optional { color:var(--muted); font-size:10px; }
-    pre { overflow:auto; margin:0; padding:13px 14px; border-radius:9px; color:#e9f3ec; background:var(--code); font:11px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; tab-size:2; }
-    .response-label { display:flex; align-items:center; gap:8px; margin:13px 0 7px; color:var(--muted); font-size:11px; font-weight:700; }
-    .http { padding:3px 6px; border-radius:5px; color:#0c6644; background:#e6f4eb; font:800 10px ui-monospace,SFMono-Regular,Consolas,monospace; }
-    .http.error { color:#a14536; background:#fff0ed; }
-    .note { margin:11px 0 0; color:var(--muted); font-size:11px; }
-    .schema { margin-top:22px; padding:18px; border:1px solid var(--line); border-radius:14px; background:#fff; }
-    .schema h2 { margin:0 0 5px; font-size:17px; } .schema p { margin:0 0 12px; color:var(--muted); font-size:13px; }
-    .schema-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
-    .schema-grid div { padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:#fafcfb; }
-    .schema-grid code { color:var(--green); font-weight:750; font-size:12px; } .schema-grid span { display:block; margin-top:2px; color:var(--muted); font-size:11px; }
-    .web-pages { margin-top:22px; padding:18px; border-radius:14px; background:#eaf3ed; }
-    .web-pages h2 { margin:0 0 8px; font-size:16px; } .web-pages p { margin:4px 0; font-size:13px; }
-    .web-pages a { color:var(--green); font-weight:750; }
-    @media(max-width:850px) { main { padding:27px 16px 45px; } .layout { grid-template-columns:1fr; } aside { position:static; display:flex; flex-wrap:wrap; gap:4px; } aside strong { width:100%; } .endpoint-body { grid-template-columns:1fr; } .endpoint-head { flex-wrap:wrap; } .endpoint-head p { width:100%; margin-left:68px; text-align:left; } .schema-grid { grid-template-columns:repeat(2,1fr); } }
-    @media(max-width:520px) { header { padding:12px 16px; flex-wrap:wrap; } .nav { width:100%; margin-left:46px; } h1 { font-size:27px; } .schema-grid { grid-template-columns:1fr 1fr; } }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="brand">G</div><strong>GreenLine</strong><span>Référence API</span>
-    <nav class="nav" aria-label="Navigation"><a href="/">Calcul ETA</a><a href="/route-tester">Adresses & parcs</a><a href="/telematics">Test télématique</a><a href="/token-management">Gestion tokens</a></nav>
-  </header>
-  <main>
+{% extends "base.html" %}
+{% block title %}GreenLine — Référence API{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/api_reference.css">{% endblock %}
+{% block content %}
+<main>
     <section class="intro">
       <small>Documentation · API v1</small>
       <h1>Référence des endpoints</h1>
@@ -252,5 +194,5 @@
       <p><a href="/">/</a> — outil ETA · <a href="/route-tester">/route-tester</a> — adresses, parcs et simulation dynamique · <a href="/live">/live</a> — simulation GPS · <a href="/telematics">/telematics</a> — test Hiboo · <a href="/token-management">/token-management</a> — administration des accès.</p>
     </section>
   </main>
-</body>
-</html>
+{% endblock %}
+{% block page_scripts %}{% endblock %}

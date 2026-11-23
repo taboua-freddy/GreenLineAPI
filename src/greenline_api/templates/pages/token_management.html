@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}GreenLine — Gestion des accès API{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/token_management.css">{% endblock %}
+{% block content %}
+<main>
+    <section class="intro"><small>Administration · Sécurité</small><h1>Tokens et quotas API</h1><p>Créez et révoquez les accès, consultez leur activité et configurez les limites journalières par endpoint.</p></section>
+
+    <section class="panel">
+      <h2>Accès administrateur</h2>
+      <p class="hint">Renseignez la valeur de <code>API_ADMIN_TOKEN</code>. Elle reste dans cet onglet et n’est jamais enregistrée par l’API.</p>
+      <div class="connect-grid"><div><label for="admin-token">Token administrateur</label><input id="admin-token" class="token-input" type="password" autocomplete="current-password" placeholder="API_ADMIN_TOKEN"></div><button id="connect-button" type="button">Se connecter</button></div>
+      <p id="global-status" role="status">L’interface est verrouillée jusqu’à la connexion.</p>
+      <div id="created-token" class="notice" role="status"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Créer un token d’accès</h2><p class="hint">Le token complet n’est affiché qu’une seule fois. Seul son hash est conservé.</p></div></div>
+      <div class="form-row"><div><label for="token-name">Nom de l’application ou de l’intégration</label><input id="token-name" maxlength="100" placeholder="Ex. application logistique"></div><button id="create-button" type="button" disabled>Créer le token</button></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Tokens enregistrés</h2><p class="hint">Les tokens révoqués sont refusés immédiatement.</p></div><button id="refresh-tokens" class="secondary" type="button" disabled>Actualiser</button></div>
+      <div id="tokens-table" class="empty">Connectez-vous pour afficher les tokens.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Utilisation journalière</h2><p class="hint">Compteurs en UTC, par token et par endpoint. Les refus de quota sont indiqués séparément.</p></div><button id="refresh-usage" class="secondary" type="button" disabled>Actualiser</button></div>
+      <div class="form-row" style="margin-bottom:12px"><div style="max-width:230px"><label for="usage-date">Journée (UTC)</label><input id="usage-date" type="date"></div></div>
+      <div id="usage-table" class="empty">Connectez-vous pour afficher l’utilisation.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-top"><div><h2>Limites journalières</h2><p class="hint">Une limite spécifique remplace la limite générale. Laissez le champ vide pour hériter de la limite générale.</p></div><button id="save-limits" type="button" disabled>Enregistrer les quotas</button></div>
+      <div class="form-row" style="margin-bottom:14px"><div style="max-width:280px"><label for="default-limit">Limite générale par token et par endpoint</label><input id="default-limit" type="number" min="1" step="1" value="1000"><small>Requêtes autorisées par jour</small></div></div>
+      <div id="quota-grid" class="quota-grid"><div class="empty">Connectez-vous pour charger les quotas.</div></div>
+    </section>
+  </main>
+{% endblock %}
+{% block page_scripts %}<script defer src="/static/js/token_management.js"></script>{% endblock %}

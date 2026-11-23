@@ -10,6 +10,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115,<1.0",
+  "jinja2>=3.1,<4.0",
   "httpx>=0.27,<1.0",
   "uvicorn[standard]>=0.34,<1.0",
   "pydantic-settings>=2.7,<3.0",
@@ -21,7 +22,7 @@ dependencies = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/greenline_api"]
-artifacts = ["src/greenline_api/static/*.html"]
+artifacts = ["src/greenline_api/static/**/*", "src/greenline_api/templates/**/*.html"]
 
 [tool.ruff]
 line-length = 100

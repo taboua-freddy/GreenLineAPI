@@ -43,3 +43,13 @@ class HibooEquipmentCacheRecord(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     equipments: Mapped[dict[str, dict[str, Any]]] = mapped_column(JSON, nullable=False)
     cached_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class HibooEquipmentRefreshRecord(Base):
+    __tablename__ = "hiboo_equipment_refresh"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    equipments: Mapped[dict[str, dict[str, Any]]] = mapped_column(JSON, nullable=False)
+    next_offset: Mapped[int] = mapped_column(Integer, nullable=False)
+    total: Mapped[int] = mapped_column(Integer, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

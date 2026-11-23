@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}GreenLine — Simulation de trajet{% endblock %}
+{% block page_styles %}<link rel="stylesheet" href="/static/css/live.css">{% endblock %}
+{% block content %}
+<main>
+    <section class="intro"><small>Interventions · Suivi</small><h1>Simuler un trajet en direct</h1><p>Choisissez les points et observez la progression du véhicule sur l’itinéraire.</p></section>
+    <div class="layout">
+      <section class="panel controls">
+        <h2 class="section-title">Trajet à simuler</h2>
+        <p class="hint">Choisissez Départ ou Arrivée, puis cliquez sur la carte pour déplacer ce point.</p>
+        <div class="selector"><button class="select-btn active" data-point="origin" type="button">● Départ</button><button class="select-btn" data-point="destination" type="button">● Arrivée</button></div>
+        <div class="point"><div class="point-head"><i class="dot"></i>Départ</div><div class="coords"><div><label for="origin-lat">Latitude</label><input id="origin-lat" type="number" step="any" value="48.8566"></div><div><label for="origin-lng">Longitude</label><input id="origin-lng" type="number" step="any" value="2.3522"></div></div></div>
+        <div class="point"><div class="point-head"><i class="dot end"></i>Arrivée</div><div class="coords"><div><label for="destination-lat">Latitude</label><input id="destination-lat" type="number" step="any" value="48.8584"></div><div><label for="destination-lng">Longitude</label><input id="destination-lng" type="number" step="any" value="2.2945"></div></div></div>
+        <div class="point"><label for="api-token">Token API GreenLine</label><input id="api-token" type="password" autocomplete="off" placeholder="gl_…"></div>
+        <div class="settings">
+          <div><label for="interval">Actualisation</label><select id="interval"><option value="1">Chaque 1 s</option><option value="2" selected>Chaque 2 s</option><option value="5">Chaque 5 s</option><option value="10">Chaque 10 s</option></select></div>
+          <div><label for="speed">Vitesse de simulation</label><select id="speed"><option value="1">1× (temps réel)</option><option value="10">10×</option><option value="60" selected>60× (rapide)</option></select></div>
+        </div>
+        <button id="start" class="primary" type="button">Calculer et démarrer</button>
+        <button id="pause" class="secondary" type="button" disabled>Mettre en pause</button>
+        <button id="reset" class="secondary" type="button">Réinitialiser</button>
+        <p id="message" role="status">Choisissez les points, puis démarrez la simulation.</p>
+        <div id="stats" class="stats">
+          <div class="stat-top"><span>Progression du trajet</span><span id="progress-value">0 %</span></div>
+          <div class="progress"><span id="progress-bar"></span></div>
+          <div class="progress-meta"><span id="remaining-distance">—</span><span id="remaining-time">—</span></div>
+          <div id="arrival-time" class="eta">—</div>
+        </div>
+        <div class="legend" aria-label="Légende du trajet"><span class="legend-item"><i class="legend-line"></i>Trajet complet</span><span class="legend-item"><i class="legend-line done"></i>Parcouru</span><span class="legend-item"><i class="legend-line left"></i>Restant</span></div>
+      </section>
+      <section class="panel map-panel"><div class="map-tip">Départ vert · arrivée corail · véhicule bleu</div><div id="map"></div><div id="map-error" class="map-error"><div><strong>Carte Google non configurée</strong>Ajoutez une clé navigateur dans GOOGLE_MAPS_API_KEY et activez Maps JavaScript API.</div></div></section>
+    </div>
+  </main>
+{% endblock %}
+{% block page_scripts %}<script defer src="/static/js/live.js"></script>{% endblock %}
